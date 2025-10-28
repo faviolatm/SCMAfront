@@ -1,7 +1,7 @@
 import UserService from '../UserService';
 
 class AnalyticsSuiteService {
-  static BASE_URL = 'http://aw01tglappd001.tycoelectronics.net';
+  static BASE_URL = 'http://127.0.0.1:8000';
 
   /**
    * Construye URLs completas

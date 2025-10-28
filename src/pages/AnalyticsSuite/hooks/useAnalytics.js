@@ -1,18 +1,20 @@
 // hooks/useAnalytics.js
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback , useMemo} from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserService from '../../../services/UserService';
 import AnalyticsSuiteService from '../../../services/AnalyticsSuite/AnalyticsSuite_service';
 import AnalyticsAccessService from '../../../services/AnalyticsSuite/AnalyticsAccessService';
+
+
 
 export const useAnalytics = () => {
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState('main');
   const [currentSection, setCurrentSection] = useState(null);
   const [analyticsData, setAnalyticsData] = useState([]);
-  const [loading, setLoading] = useState(true); // Iniciamos en true para verificar acceso
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+ 
   // Estados para control de acceso
   const [accessInfo, setAccessInfo] = useState(null);
   const [hasAccess, setHasAccess] = useState(false);
@@ -20,7 +22,6 @@ export const useAnalytics = () => {
 
   // Opciones BI base (se filtrarán según permisos)
   const allBIOptions = [
-    //{ name: 'DC Management', color: 'slate-800', cardKey: 'bi_card' },
     { name: 'Global Freight', color: 'slate-800', cardKey: 'bi_card' },
     { name: 'DC Quality & Operations', color: 'slate-800', cardKey: 'bi_card' },
     { name: 'Freight Audit & Pay (FAP)', color: 'slate-800', cardKey: 'bi_card' },
@@ -28,23 +29,39 @@ export const useAnalytics = () => {
     { name: 'Global Planning & ESH', color: 'slate-800', cardKey: 'bi_card' }
   ];
 
+const allAIOptions = useMemo(() => [
+  { 
+    name: 'InsightEdge', 
+    color: 'slate-800', 
+    cardKey: 'ai_card',
+    description: 'Advanced part lookup and BOM analysis with AI-powered insights',
+    route: '/analytics-suite/insightedge'
+  }
+  // Aquí puedes agregar más opciones AI en el futuro
+], []);
+
   // Opciones BI filtradas según permisos del usuario
-  const biOptions = hasAccess && availableCards.some(card => card.key === 'bi_card') 
-    ? allBIOptions 
+  const biOptions = hasAccess && availableCards.some(card => card.key === 'bi_card')
+    ? allBIOptions
+    : [];
+
+  // Opciones AI filtradas según permisos del usuario
+  const aiOptions = hasAccess && availableCards.some(card => card.key === 'ai_card')
+    ? allAIOptions
     : [];
 
   // Verificar si es admin
-  const isAdmin = ['TE605135', 'TE407929', 'TE589552', 'TE535073', 'TE588075', 'TE587267', 'TE558231', 'TE595382'  ]
-  .includes(UserService.getCurrentUserId());
+  const isAdmin = ['TE605135', 'TE407929', 'TE589552', 'TE535073', 'TE588075', 'TE587267', 'TE558231', 'TE595382']
+    .includes(UserService.getCurrentUserId());
 
   // Función para verificar acceso inicial
   const checkUserAccess = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+   
     try {
       const accessData = await AnalyticsAccessService.getAllAccessInfo();
-      
+     
       if (accessData.error) {
         setError(accessData.error);
         setHasAccess(false);
@@ -54,7 +71,7 @@ export const useAnalytics = () => {
         setHasAccess(accessData.hasAccess);
         setAccessInfo(accessData);
         setAvailableCards(accessData.cards || []);
-        
+       
         if (!accessData.hasAccess) {
           setError('No tienes permisos para acceder a Analytics Suite');
         }
@@ -80,7 +97,7 @@ export const useAnalytics = () => {
     if (!sectionName || !hasAccess) return;
     setLoading(true);
     setError(null);
-    
+   
     try {
       const response = await AnalyticsSuiteService.getUrlsBySection(sectionName);
       setAnalyticsData(response || []);
@@ -106,7 +123,7 @@ export const useAnalytics = () => {
       setError('No tienes permisos para acceder a esta sección');
       return;
     }
-    
+   
     setCurrentSection(optionName);
     setCurrentView('section');
     setLoading(true);
@@ -114,46 +131,75 @@ export const useAnalytics = () => {
     setAnalyticsData([]);
   }, [hasAccess]);
 
-  // Manejar clic en AI
+  // Manejar clic en opción AI
+  const handleAIOptionClick = useCallback((optionName) => {
+    if (!hasAccess) {
+      setError('No tienes permisos para acceder a esta sección');
+      return;
+    }
+   
+    // Verificar si tiene acceso específico a AI
+    const hasAIAccess = availableCards.some(card => card.key === 'ai_card');
+   
+    if (!hasAIAccess) {
+      setError('No tienes permisos para acceder a la sección de AI');
+      return;
+    }
+
+    // Buscar la ruta de la opción seleccionada
+    const selectedOption = allAIOptions.find(opt => opt.name === optionName);
+    
+    if (selectedOption && selectedOption.route) {
+      // Navegar a la ruta específica de la aplicación AI
+      navigate(selectedOption.route);
+    } else {
+      // Si no hay ruta definida, mostrar error
+      setError('Ruta no configurada para esta opción');
+    }
+  }, [hasAccess, availableCards, navigate, allAIOptions]);
+
+  // Manejar clic en AI card principal
   const handleAIClick = useCallback(async () => {
     if (!hasAccess) {
       setError('No tienes permisos para acceder a Analytics Suite');
       return;
     }
-    
+   
     // Verificar si tiene acceso específico a AI
     const hasAIAccess = availableCards.some(card => card.key === 'ai_card');
-    
+   
     if (!hasAIAccess) {
       setError('No tienes permisos para acceder a la sección de AI');
       return;
     }
-    
-    // Si tiene acceso, navegar (por ahora a not-found, luego implementar AI)
-    navigate('/not-found');
-  }, [hasAccess, availableCards, navigate]);
-  
+   
+    setCurrentView('ai');
+    setAnalyticsData([]);
+    setCurrentSection(null);
+    setError(null);
+  }, [hasAccess, availableCards]);
+
   // Manejar clic en BI
   const handleBIClick = useCallback(async () => {
     if (!hasAccess) {
       setError('No tienes permisos para acceder a Analytics Suite');
       return;
     }
-    
+   
     // Verificar si tiene acceso específico a BI
     const hasBIAccess = availableCards.some(card => card.key === 'bi_card');
-    
+   
     if (!hasBIAccess) {
       setError('No tienes permisos para acceder a la sección de BI');
       return;
     }
-    
+   
     setCurrentView('bi');
     setAnalyticsData([]);
     setCurrentSection(null);
     setError(null);
   }, [hasAccess, availableCards]);
-  
+ 
   // Otras funciones de navegación
   const handleBackToMain = useCallback(() => {
     setCurrentView('main');
@@ -161,9 +207,16 @@ export const useAnalytics = () => {
     setAnalyticsData([]);
     setError(null);
   }, []);
-  
+ 
   const handleBackToBIOptions = useCallback(() => {
     setCurrentView('bi');
+    setCurrentSection(null);
+    setAnalyticsData([]);
+    setError(null);
+  }, []);
+
+  const handleBackToAIOptions = useCallback(() => {
+    setCurrentView('ai');
     setCurrentSection(null);
     setAnalyticsData([]);
     setError(null);
@@ -181,11 +234,11 @@ export const useAnalytics = () => {
   // Función para recargar configuración (solo admin)
   const handleConfigReload = useCallback(async () => {
     if (!isAdmin) return;
-    
+   
     try {
       setLoading(true);
       const result = await AnalyticsAccessService.reloadConfig();
-      
+     
       // Recargar acceso después de actualizar config
       await checkUserAccess();
     } catch (error) {
@@ -201,24 +254,27 @@ export const useAnalytics = () => {
     currentView,
     currentSection,
     biOptions,
+    aiOptions,
     isAdmin,
     analyticsData,
     loading,
     error,
-    
+   
     // Estados de acceso
     hasAccess,
     accessInfo,
     availableCards,
-    
+   
     // Funciones de navegación
     handleAIClick,
     handleBIClick,
     handleBIOptionClick,
+    handleAIOptionClick,
     handleBackToMain,
     handleBackToBIOptions,
+    handleBackToAIOptions,
     handleDataUpdate,
-    
+   
     // Funciones adicionales
     handleConfigReload,
     checkUserAccess

@@ -1,6 +1,6 @@
 import UserService from '../UserService';
 
-const API_BASE_URL = 'http://aw01tglappd001.tycoelectronics.net/global/analytics-access';
+const API_BASE_URL = 'http://127.0.0.1:8000/global/analytics-access';
 
 class AnalyticsAccessService {
 

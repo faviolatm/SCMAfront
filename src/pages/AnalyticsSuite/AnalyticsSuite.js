@@ -86,6 +86,21 @@ const WarehouseIcons = {
   )
 };
 
+// AI Icons for AI options
+const AIIcons = {
+  'InsightEdge': () => (
+    <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+      <path d="M2 17l10 5 10-5"/>
+      <path d="M2 12l10 5 10-5"/>
+      <circle cx="12" cy="12" r="2" fill="currentColor"/>
+      <path d="M12 2v5"/>
+      <path d="M7 9.5L5 8"/>
+      <path d="M17 9.5l2-1.5"/>
+    </svg>
+  )
+};
+
 // Modal de contacto elegante
 const ContactModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
@@ -96,7 +111,7 @@ const ContactModal = ({ isOpen, onClose }) => {
       email: "rajaram.r@te.com"
     },
     {
-      name: "Suresh, Priyanka", 
+      name: "Suresh, Priyanka",
       email: "priyanka.suresh@te.com"
     },
     {
@@ -135,7 +150,6 @@ const ContactModal = ({ isOpen, onClose }) => {
           <p className="text-slate-600 mb-6 leading-relaxed">
             For any questions or assistance, please contact our support team:
           </p>
-
           <div className="space-y-4">
             {contacts.map((contact, index) => (
               <div key={index} className="bg-slate-50 rounded-2xl p-4 hover:bg-orange-50 transition-colors duration-200">
@@ -147,7 +161,7 @@ const ContactModal = ({ isOpen, onClose }) => {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-slate-800 mb-1">{contact.name}</h3>
-                    <a 
+                    <a
                       href={`mailto:${contact.email}`}
                       className="text-orange-600 hover:text-orange-700 transition-colors duration-200 text-sm"
                     >
@@ -195,8 +209,8 @@ const ErrorMessage = ({ error, onRetry }) => (
       
       <button
         onClick={onRetry}
-        className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 
-                   text-white font-medium px-6 py-3 rounded-xl transition-all duration-300 
+        className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800
+                   text-white font-medium px-6 py-3 rounded-xl transition-all duration-300
                    shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105"
       >
         <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,20 +222,20 @@ const ErrorMessage = ({ error, onRetry }) => (
   </div>
 );
 
-// Card mejorada con iconos warehouse y colores naranjas
+// Card mejorada con iconos warehouse y colores naranjas (para BI)
 const BIOption = ({ option, onClick }) => {
   const IconComponent = WarehouseIcons[option.name];
-  
+ 
   return (
     <div
       onClick={() => onClick(option.name)}
-      className="group relative bg-white rounded-3xl p-8 cursor-pointer shadow-lg hover:shadow-2xl 
+      className="group relative bg-white rounded-3xl p-8 cursor-pointer shadow-lg hover:shadow-2xl
                  hover:-translate-y-4 transition-all duration-500 ease-out
                  border border-slate-200 hover:border-orange-400
                  overflow-hidden min-h-[280px] hover:bg-orange-50"
     >
       {/* Efecto de brillo sutil */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent 
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent
                       opacity-0 group-hover:opacity-100 transition-opacity duration-500
                       transform -skew-x-12 group-hover:animate-pulse"></div>
       
@@ -235,7 +249,7 @@ const BIOption = ({ option, onClick }) => {
       <div className="relative z-10 flex flex-col h-full">
         {/* Icono con efecto de hover */}
         <div className="flex justify-center mb-6">
-          <div className="p-4 rounded-2xl bg-orange-100 group-hover:bg-orange-200 
+          <div className="p-4 rounded-2xl bg-orange-100 group-hover:bg-orange-200
                           group-hover:scale-110 transition-all duration-300
                           shadow-md group-hover:shadow-lg">
             <div className="text-slate-800 group-hover:text-orange-600 transition-colors duration-300">
@@ -268,7 +282,7 @@ const BIOption = ({ option, onClick }) => {
       </div>
 
       {/* Efecto de esquina brillante */}
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/40 to-transparent 
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/40 to-transparent
                       rounded-bl-full opacity-60 group-hover:opacity-100 transition-opacity duration-300"></div>
       
       {/* Efecto de esquina inferior naranja */}
@@ -280,14 +294,79 @@ const BIOption = ({ option, onClick }) => {
   );
 };
 
+
+const AIOption = ({ option, onClick }) => {
+  const IconComponent = AIIcons[option.name];
+  
+  return (
+    <div 
+      onClick={() => onClick(option.name)} 
+      className="group relative bg-white rounded-3xl p-8 cursor-pointer shadow-lg hover:shadow-2xl hover:-translate-y-4 transition-all duration-500 ease-out border border-slate-200 hover:border-orange-400 overflow-hidden min-h-[280px] hover:bg-orange-50"
+    >
+      {/* Efecto de brillo sutil */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:animate-pulse"></div>
+      
+      {/* Borde brillante en hover con colores naranja */}
+      <div 
+        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm" 
+        style={{ 
+          background: 'linear-gradient(to right, rgba(249, 115, 22, 0.3), rgba(251, 146, 60, 0.3), rgba(234, 88, 12, 0.3))' 
+        }}
+      ></div>
+      
+      {/* Contenido */}
+      <div className="relative z-10 flex flex-col h-full">
+        {/* Icono con efecto de hover */}
+        <div className="flex justify-center mb-6">
+          <div className="p-4 rounded-2xl bg-orange-100 group-hover:bg-orange-200 group-hover:scale-110 transition-all duration-300 shadow-md group-hover:shadow-lg">
+            <div className="text-slate-800 group-hover:text-orange-600 transition-colors duration-300">
+              {IconComponent && <IconComponent />}
+            </div>
+          </div>
+        </div>
+        
+        {/* Título */}
+        <h3 className="text-slate-800 text-2xl font-bold mb-4 text-center group-hover:text-orange-600 transition-colors duration-300">
+          {option.name}
+        </h3>
+        
+        {/* Descripción */}
+        <p className="text-slate-600 text-base leading-relaxed text-center flex-grow group-hover:text-slate-700 transition-colors duration-300">
+          {option.description || `Explore ${option.name} AI-powered analytics and intelligent insights`}
+        </p>
+        
+        {/* Indicador de acción */}
+        <div className="mt-6 flex justify-center">
+          <div className="px-4 py-2 bg-slate-200 group-hover:bg-orange-500 rounded-full text-slate-700 group-hover:text-white text-sm font-medium transition-all duration-300 transform group-hover:scale-105 shadow-sm group-hover:shadow-md">
+            Launch Application →
+          </div>
+        </div>
+      </div>
+      
+      {/* Efecto de esquina brillante */}
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/40 to-transparent rounded-bl-full opacity-60 group-hover:opacity-100 transition-opacity duration-300"></div>
+      
+      {/* Efecto de esquina inferior naranja */}
+      <div 
+        className="absolute bottom-0 left-0 w-24 h-24 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-tr-full" 
+        style={{ 
+          background: 'linear-gradient(to top right, rgba(249, 115, 22, 0.15), transparent)' 
+        }}
+      ></div>
+    </div>
+  );
+};
+
+
+
 // Card principal con imágenes de fondo - URLs desde el service centralizado
 const MainCard = ({ title, subtitle, imageKey, onClick }) => {
   const imageUrls = AnalyticsSuiteService.getImageUrls();
   const imageUrl = imageUrls[imageKey.toLowerCase()];
-  
+ 
   // Configuración especial para la card Contact
   const isContactCard = title === "Contact";
-  
+ 
   return (
     <div
       onClick={onClick}
@@ -314,12 +393,12 @@ const MainCard = ({ title, subtitle, imageKey, onClick }) => {
       )}
       
       {/* Efecto de brillo animado */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent
                       opacity-0 group-hover:opacity-100 transition-opacity duration-700
                       transform -skew-x-12 group-hover:translate-x-full duration-1000"></div>
       
       {/* Borde brillante */}
-      <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-white/30 via-transparent to-white/30 
+      <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-white/30 via-transparent to-white/30
                       opacity-0 group-hover:opacity-100 transition-opacity duration-500 p-[2px]">
         <div className="w-full h-full bg-transparent rounded-3xl"></div>
       </div>
@@ -334,7 +413,7 @@ const MainCard = ({ title, subtitle, imageKey, onClick }) => {
             {/* Círculo medio */}
             <div className="absolute inset-2 w-20 h-20 bg-white bg-opacity-30 rounded-full group-hover:scale-110 transition-transform duration-300"></div>
             {/* Icono principal */}
-            <div className="relative w-24 h-24 bg-white bg-opacity-25 rounded-full flex items-center justify-center 
+            <div className="relative w-24 h-24 bg-white bg-opacity-25 rounded-full flex items-center justify-center
                             group-hover:bg-opacity-40 transition-all duration-300 backdrop-blur-sm
                             border border-white border-opacity-30">
               <svg className="w-10 h-10 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
@@ -359,7 +438,7 @@ const MainCard = ({ title, subtitle, imageKey, onClick }) => {
       </div>
 
       {/* Efecto de esquina brillante */}
-      <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-white/20 to-transparent 
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-white/20 to-transparent
                       rounded-tr-full opacity-50 group-hover:opacity-80 transition-opacity duration-300"></div>
       
       {/* Elementos decorativos elegantes para Contact */}
@@ -389,8 +468,8 @@ const MainCard = ({ title, subtitle, imageKey, onClick }) => {
 const BackButton = ({ onClick, children, className = "" }) => (
   <button
     onClick={onClick}
-    className={`bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 
-               text-white font-medium px-6 py-3 rounded-xl transition-all duration-300 
+    className={`bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900
+               text-white font-medium px-6 py-3 rounded-xl transition-all duration-300
                shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-2 ${className}`}
   >
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -402,11 +481,12 @@ const BackButton = ({ onClick, children, className = "" }) => (
 
 const AnalyticsSuite = () => {
   const [showContactModal, setShowContactModal] = React.useState(false);
-  
+ 
   const {
     currentView,
     currentSection,
     biOptions,
+    aiOptions,
     isAdmin,
     analyticsData,
     loading,
@@ -414,21 +494,23 @@ const AnalyticsSuite = () => {
     handleAIClick,
     handleBIClick,
     handleBIOptionClick,
+    handleAIOptionClick,
     handleBackToMain,
     handleBackToBIOptions,
+    handleBackToAIOptions,
     handleDataUpdate
   } = useAnalytics();
 
   const renderSection = () => {
     const Component = sectionComponents[currentSection];
-    
+   
     if (!Component) {
       return (
         <div className="p-8 max-w-7xl mx-auto min-h-screen">
           <BackButton onClick={handleBackToBIOptions} className="mb-8">
             Back to BI Options
           </BackButton>
-          
+         
           <div className="text-center p-8">
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 inline-block">
               <h3 className="text-yellow-800 font-semibold mb-2">Section Not Found</h3>
@@ -445,7 +527,7 @@ const AnalyticsSuite = () => {
           <BackButton onClick={handleBackToBIOptions} className="mb-8">
             Back to BI Options
           </BackButton>
-          
+         
           <div className="mt-20">
             <Loader />
           </div>
@@ -465,8 +547,8 @@ const AnalyticsSuite = () => {
     }
 
     return (
-      <Component 
-        onBack={handleBackToBIOptions} 
+      <Component
+        onBack={handleBackToBIOptions}
         isAdmin={isAdmin}
         data={analyticsData}
         onDataUpdate={handleDataUpdate}
@@ -513,12 +595,12 @@ const AnalyticsSuite = () => {
           </div>
 
           {/* Modal de contacto */}
-          <ContactModal 
-            isOpen={showContactModal} 
-            onClose={() => setShowContactModal(false)} 
+          <ContactModal
+            isOpen={showContactModal}
+            onClose={() => setShowContactModal(false)}
           />
         </>
-      ) : (
+      ) : currentView === 'bi' ? (
         <div>
           {/* Header de BI Options */}
           <div className="mb-12">
@@ -532,7 +614,7 @@ const AnalyticsSuite = () => {
           {/* BI Options Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {biOptions.map((option) => (
-              <BIOption 
+              <BIOption
                 key={option.name}
                 option={option}
                 onClick={handleBIOptionClick}
@@ -540,7 +622,29 @@ const AnalyticsSuite = () => {
             ))}
           </div>
         </div>
-      )}
+      ) : currentView === 'ai' ? (
+        <div>
+          {/* Header de AI Options */}
+          <div className="mb-12">
+            <BackButton onClick={handleBackToMain} className="mb-6">
+              Back to Main
+            </BackButton>            
+            <div className="text-center">
+            </div>
+          </div>
+
+          {/* AI Options Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            {aiOptions.map((option) => (
+              <AIOption
+                key={option.name}
+                option={option}
+                onClick={handleAIOptionClick}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
