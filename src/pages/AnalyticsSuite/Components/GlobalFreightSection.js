@@ -40,7 +40,7 @@ const GlobalFreightSection = ({ onBack, isAdmin, data = [], onDataUpdate, loadin
     if (!fileName) return null;
     
     // Usa el service centralizado
-    return AnalyticsSuiteService.buildUrl(`/global/images/${fileName}.webp`);
+    return AnalyticsSuiteService.buildUrl(`/analytics/images/${fileName}.webp`);
   };
 
   // Crear las opciones enriquecidas con las URLs de imágenes

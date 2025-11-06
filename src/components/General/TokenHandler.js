@@ -10,8 +10,7 @@ const TokenHandler = () => {
     const urlToken = searchParams.get('token');
     
     if (urlToken) {
-      console.log('✅ Token recibido:', urlToken);
-      
+
       // Guardar en localStorage
       localStorage.setItem('analytics_token', urlToken);
       
