@@ -28,7 +28,7 @@ const DCQualitySection = ({ onBack, isAdmin, data = [], onDataUpdate, loading })
   const getImageUrl = (optionName) => {
     const fileName = getImageFileName(optionName);
     if (!fileName) return null;
-    return AnalyticsSuiteService.buildUrl(`/global/images/${fileName}.webp`);
+    return AnalyticsSuiteService.buildUrl(`/analytics/images/${fileName}.webp`);
   };
 
   // Crear las opciones enriquecidas con las URLs de imágenes

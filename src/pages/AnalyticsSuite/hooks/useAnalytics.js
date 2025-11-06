@@ -1,11 +1,7 @@
 // hooks/useAnalytics.js
-import { useState, useEffect, useCallback , useMemo} from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import UserService from '../../../services/UserService';
 import AnalyticsSuiteService from '../../../services/AnalyticsSuite/AnalyticsSuite_service';
-import AnalyticsAccessService from '../../../services/AnalyticsSuite/AnalyticsAccessService';
-
-
 
 export const useAnalytics = () => {
   const navigate = useNavigate();
@@ -15,90 +11,76 @@ export const useAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
  
-  // Estados para control de acceso
-  const [accessInfo, setAccessInfo] = useState(null);
-  const [hasAccess, setHasAccess] = useState(false);
-  const [availableCards, setAvailableCards] = useState([]);
+  // 🔹 NUEVOS - Estados de autenticación
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+  const [token, setToken] = useState(null);
 
-  // Opciones BI base (se filtrarán según permisos)
-  const allBIOptions = [
-    { name: 'Global Freight', color: 'slate-800', cardKey: 'bi_card' },
-    { name: 'DC Quality & Operations', color: 'slate-800', cardKey: 'bi_card' },
-    { name: 'Freight Audit & Pay (FAP)', color: 'slate-800', cardKey: 'bi_card' },
-    { name: 'Global Control Tower', color: 'slate-800', cardKey: 'bi_card' },
-    { name: 'Global Planning & ESH', color: 'slate-800', cardKey: 'bi_card' }
-  ];
+  // Opciones BI (ahora públicas)
+  const allBIOptions = useMemo(() => [
+    { name: 'Global Freight', color: 'slate-800' },
+    { name: 'DC Quality & Operations', color: 'slate-800' },
+    { name: 'Freight Audit & Pay (FAP)', color: 'slate-800' },
+    { name: 'Global Control Tower', color: 'slate-800' },
+    { name: 'Global Planning & ESH', color: 'slate-800' }
+  ], []);
 
-const allAIOptions = useMemo(() => [
-  { 
-    name: 'InsightEdge', 
-    color: 'slate-800', 
-    cardKey: 'ai_card',
-    description: 'Advanced part lookup and BOM analysis with AI-powered insights',
-    route: '/analytics-suite/insightedge'
-  }
-  // Aquí puedes agregar más opciones AI en el futuro
-], []);
+  // Opciones AI (ahora públicas)
+  const allAIOptions = useMemo(() => [
+    { 
+      name: 'InsightEdge', 
+      color: 'slate-800',
+      description: 'Advanced part lookup and BOM analysis with AI-powered insights',
+      route: '/analytics-suite/insightedge'
+    }
+  ], []);
 
-  // Opciones BI filtradas según permisos del usuario
-  const biOptions = hasAccess && availableCards.some(card => card.key === 'bi_card')
-    ? allBIOptions
-    : [];
-
-  // Opciones AI filtradas según permisos del usuario
-  const aiOptions = hasAccess && availableCards.some(card => card.key === 'ai_card')
-    ? allAIOptions
-    : [];
-
-  // Verificar si es admin
-  const isAdmin = ['TE605135', 'TE407929', 'TE589552', 'TE535073', 'TE588075', 'TE587267', 'TE558231', 'TE595382']
-    .includes(UserService.getCurrentUserId());
-
-  // Función para verificar acceso inicial
-  const checkUserAccess = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-   
-    try {
-      const accessData = await AnalyticsAccessService.getAllAccessInfo();
-     
-      if (accessData.error) {
-        setError(accessData.error);
-        setHasAccess(false);
-        setAccessInfo(null);
-        setAvailableCards([]);
-      } else {
-        setHasAccess(accessData.hasAccess);
-        setAccessInfo(accessData);
-        setAvailableCards(accessData.cards || []);
-       
-        if (!accessData.hasAccess) {
-          setError('No tienes permisos para acceder a Analytics Suite');
-        }
+  // 🔹 NUEVO - Verificar autenticación y permisos
+  const checkAuthStatus = useCallback(async () => {
+    const storedToken = localStorage.getItem('analytics_token');
+    
+    if (storedToken) {
+      setToken(storedToken);
+      setIsAuthenticated(true);
+      
+      // Verificar si es admin
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/analytics-suite/admin/check`, {
+          headers: {
+            'Authorization': `Bearer ${storedToken}`
+          }
+        });
+        const data = await response.json();
+        setIsAdmin(data.is_admin);
+        setUserInfo({ user_id: data.user_id });
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
       }
-    } catch (error) {
-      console.error('💥 Error checking access:', error);
-      setError('Error verificando permisos de acceso');
-      setHasAccess(false);
-      setAccessInfo(null);
-      setAvailableCards([]);
-    } finally {
-      setLoading(false);
+    } else {
+      setIsAuthenticated(false);
+      setIsAdmin(false);
+      setToken(null);
+      setUserInfo(null);
     }
   }, []);
 
-  // Verificar acceso al cargar el componente
+  // 🔹 Verificar autenticación al cargar
   useEffect(() => {
-    checkUserAccess();
-  }, [checkUserAccess]);
+    checkAuthStatus();
+    setLoading(false);
+  }, [checkAuthStatus]);
 
-  // Función para cargar datos de sección
+  // 🔹 MODIFICADO - Cargar datos de sección (ahora público, pero pasa token si existe)
   const loadSectionData = useCallback(async (sectionName = currentSection) => {
-    if (!sectionName || !hasAccess) return;
+    if (!sectionName) return;
+    
     setLoading(true);
     setError(null);
    
     try {
+      // Las URLs son públicas, no necesita autenticación
       const response = await AnalyticsSuiteService.getUrlsBySection(sectionName);
       setAnalyticsData(response || []);
     } catch (error) {
@@ -108,44 +90,26 @@ const allAIOptions = useMemo(() => [
     } finally {
       setLoading(false);
     }
-  }, [currentSection, hasAccess]);
+  }, [currentSection]);
 
   // Cargar datos cuando cambia la sección
   useEffect(() => {
-    if (currentSection && currentView === 'section' && hasAccess) {
+    if (currentSection && currentView === 'section') {
       loadSectionData();
     }
-  }, [currentSection, currentView, loadSectionData, hasAccess]);
+  }, [currentSection, currentView, loadSectionData]);
 
-  // Manejar clic en opción BI
+  // 🔹 MODIFICADO - Manejar clic en opción BI (ahora público)
   const handleBIOptionClick = useCallback((optionName) => {
-    if (!hasAccess) {
-      setError('No tienes permisos para acceder a esta sección');
-      return;
-    }
-   
     setCurrentSection(optionName);
     setCurrentView('section');
     setLoading(true);
     setError(null);
     setAnalyticsData([]);
-  }, [hasAccess]);
+  }, []);
 
-  // Manejar clic en opción AI
+  // 🔹 MODIFICADO - Manejar clic en opción AI (ahora público)
   const handleAIOptionClick = useCallback((optionName) => {
-    if (!hasAccess) {
-      setError('No tienes permisos para acceder a esta sección');
-      return;
-    }
-   
-    // Verificar si tiene acceso específico a AI
-    const hasAIAccess = availableCards.some(card => card.key === 'ai_card');
-   
-    if (!hasAIAccess) {
-      setError('No tienes permisos para acceder a la sección de AI');
-      return;
-    }
-
     // Buscar la ruta de la opción seleccionada
     const selectedOption = allAIOptions.find(opt => opt.name === optionName);
     
@@ -156,51 +120,25 @@ const allAIOptions = useMemo(() => [
       // Si no hay ruta definida, mostrar error
       setError('Ruta no configurada para esta opción');
     }
-  }, [hasAccess, availableCards, navigate, allAIOptions]);
+  }, [navigate, allAIOptions]);
 
-  // Manejar clic en AI card principal
-  const handleAIClick = useCallback(async () => {
-    if (!hasAccess) {
-      setError('No tienes permisos para acceder a Analytics Suite');
-      return;
-    }
-   
-    // Verificar si tiene acceso específico a AI
-    const hasAIAccess = availableCards.some(card => card.key === 'ai_card');
-   
-    if (!hasAIAccess) {
-      setError('No tienes permisos para acceder a la sección de AI');
-      return;
-    }
-   
+  // 🔹 MODIFICADO - Manejar clic en AI card (ahora público)
+  const handleAIClick = useCallback(() => {
     setCurrentView('ai');
     setAnalyticsData([]);
     setCurrentSection(null);
     setError(null);
-  }, [hasAccess, availableCards]);
+  }, []);
 
-  // Manejar clic en BI
-  const handleBIClick = useCallback(async () => {
-    if (!hasAccess) {
-      setError('No tienes permisos para acceder a Analytics Suite');
-      return;
-    }
-   
-    // Verificar si tiene acceso específico a BI
-    const hasBIAccess = availableCards.some(card => card.key === 'bi_card');
-   
-    if (!hasBIAccess) {
-      setError('No tienes permisos para acceder a la sección de BI');
-      return;
-    }
-   
+  // 🔹 MODIFICADO - Manejar clic en BI (ahora público)
+  const handleBIClick = useCallback(() => {
     setCurrentView('bi');
     setAnalyticsData([]);
     setCurrentSection(null);
     setError(null);
-  }, [hasAccess, availableCards]);
+  }, []);
  
-  // Otras funciones de navegación
+  // Funciones de navegación (sin cambios)
   const handleBackToMain = useCallback(() => {
     setCurrentView('main');
     setCurrentSection(null);
@@ -222,48 +160,38 @@ const allAIOptions = useMemo(() => [
     setError(null);
   }, []);
 
-  // Función para actualizar datos
+  // 🔹 MODIFICADO - Función para actualizar datos
   const handleDataUpdate = useCallback(() => {
     if (currentSection) {
       loadSectionData();
-    } else {
-      checkUserAccess();
     }
-  }, [loadSectionData, checkUserAccess, currentSection]);
+  }, [loadSectionData, currentSection]);
 
-  // Función para recargar configuración (solo admin)
-  const handleConfigReload = useCallback(async () => {
-    if (!isAdmin) return;
-   
-    try {
-      setLoading(true);
-      const result = await AnalyticsAccessService.reloadConfig();
-     
-      // Recargar acceso después de actualizar config
-      await checkUserAccess();
-    } catch (error) {
-      console.error('Error reloading config:', error);
-      setError('Error recargando configuración');
-    } finally {
-      setLoading(false);
-    }
-  }, [isAdmin, checkUserAccess]);
+  // 🔹 NUEVO - Función para logout
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('analytics_token');
+    setIsAuthenticated(false);
+    setIsAdmin(false);
+    setToken(null);
+    setUserInfo(null);
+    window.location.reload();
+  }, []);
 
   return {
     // Estados básicos
     currentView,
     currentSection,
-    biOptions,
-    aiOptions,
-    isAdmin,
+    biOptions: allBIOptions, // 🔹 Ahora siempre disponibles
+    aiOptions: allAIOptions, // 🔹 Ahora siempre disponibles
+    isAdmin, // 🔹 Ahora viene del backend
     analyticsData,
     loading,
     error,
    
-    // Estados de acceso
-    hasAccess,
-    accessInfo,
-    availableCards,
+    // 🔹 NUEVOS - Estados de autenticación
+    isAuthenticated,
+    userInfo,
+    token,
    
     // Funciones de navegación
     handleAIClick,
@@ -275,8 +203,8 @@ const allAIOptions = useMemo(() => [
     handleBackToAIOptions,
     handleDataUpdate,
    
-    // Funciones adicionales
-    handleConfigReload,
-    checkUserAccess
+    // 🔹 NUEVAS - Funciones adicionales
+    handleLogout,
+    checkAuthStatus
   };
 };
