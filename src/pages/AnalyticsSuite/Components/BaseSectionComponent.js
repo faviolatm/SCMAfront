@@ -1,6 +1,6 @@
 // Components/BaseSectionComponent.js
 import React, { useState } from 'react';
-import AnalyticsSuiteService from '../../../services/AnalyticsSuite/AnalyticsSuite_service';
+import AnalyticsSuiteService from '../../../services/AnalyticsSuite_service';
 
 const BaseSectionComponent = ({ 
   sectionName, 

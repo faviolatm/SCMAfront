@@ -1,7 +1,7 @@
 // hooks/useAnalytics.js
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AnalyticsSuiteService from '../../../services/AnalyticsSuite/AnalyticsSuite_service';
+import AnalyticsSuiteService from '../../../services/AnalyticsSuite_service';
 
 export const useAnalytics = () => {
   const navigate = useNavigate();

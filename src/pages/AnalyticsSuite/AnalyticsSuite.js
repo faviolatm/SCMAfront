@@ -7,7 +7,7 @@ import DCQualitySection from './Components/DCQualitySection';
 import FreightAuditSection from './Components/FreightAuditSection';
 import GlobalControlTowerSection from './Components/GlobalControlTowerSection';
 import GlobalPlanningSection from './Components/GlobalPlanningSection';
-import AnalyticsSuiteService from '../../services/AnalyticsSuite/AnalyticsSuite_service';
+import AnalyticsSuiteService from '../../services/AnalyticsSuite_service';
 
 const sectionComponents = {
   'DC Management': DCManagementSection,

@@ -1,7 +1,7 @@
 // services/AnalyticsSuite/AnalyticsSuite_service.js
 
 class AnalyticsSuiteService {
-  static BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+  static BASE_URL = process.env.REACT_APP_API_URL || 'http://lms.tycoelectronics.net';
 
   /**
    * Construye URLs completas
@@ -46,7 +46,7 @@ class AnalyticsSuiteService {
    */
   static async getAnalyticsSuiteInfo() {
     try {
-      const url = this.buildUrl('/api/analytics-suite/info');
+      const url = this.buildUrl('/analytics/analytics-suite/info');
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
@@ -70,7 +70,7 @@ class AnalyticsSuiteService {
    */
   static async getAllDashboards() {
     try {
-      const url = this.buildUrl('/api/analytics-suite/dashboards');
+      const url = this.buildUrl('/analytics/analytics-suite/dashboards');
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
@@ -94,7 +94,7 @@ class AnalyticsSuiteService {
    */
   static async getAllSections() {
     try {
-      const url = this.buildUrl('/api/analytics-suite/sections');
+      const url = this.buildUrl('/analytics/analytics-suite/sections');
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
@@ -119,7 +119,7 @@ class AnalyticsSuiteService {
    */
   static async getUrlsBySection(section) {
     try {
-      const url = this.buildUrl(`/api/analytics-suite/section/${encodeURIComponent(section)}`);
+      const url = this.buildUrl(`/analytics/analytics-suite/urls/${encodeURIComponent(section)}`);
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
@@ -151,7 +151,7 @@ class AnalyticsSuiteService {
         return { is_admin: false, user_id: null };
       }
 
-      const url = this.buildUrl('/api/analytics-suite/admin/check');
+      const url = this.buildUrl('/analytics/analytics-suite/admin/check');
       const response = await fetch(url, {
         method: 'GET',
         headers: this.getHeaders()
@@ -177,7 +177,7 @@ class AnalyticsSuiteService {
    */
   static async getAllDashboardsAdmin() {
     try {
-      const url = this.buildUrl('/api/analytics-suite/admin/dashboards');
+      const url = this.buildUrl('/analytics/analytics-suite/admin/dashboards');
       const response = await fetch(url, {
         method: 'GET',
         headers: this.getHeaders()
@@ -222,7 +222,7 @@ class AnalyticsSuiteService {
         requestData.icon = icon;
       }
 
-      const response = await fetch(this.buildUrl('/api/analytics-suite/admin/dashboard'), {
+      const response = await fetch(this.buildUrl('/analytics/analytics-suite/admin/dashboard'), {
         method: 'PUT',
         headers: this.getHeaders(),
         body: JSON.stringify(requestData)
@@ -266,7 +266,7 @@ class AnalyticsSuiteService {
         icon: icon
       };
 
-      const response = await fetch(this.buildUrl('/api/analytics-suite/admin/dashboard'), {
+      const response = await fetch(this.buildUrl('/analytics/analytics-suite/admin/dashboard'), {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(requestData)
@@ -299,7 +299,7 @@ class AnalyticsSuiteService {
         option_name: optionName
       };
 
-      const response = await fetch(this.buildUrl('/api/analytics-suite/admin/dashboard'), {
+      const response = await fetch(this.buildUrl('/analytics/analytics-suite/admin/dashboard'), {
         method: 'DELETE',
         headers: this.getHeaders(),
         body: JSON.stringify(requestData)

@@ -1,6 +1,6 @@
 import React from 'react';
 import BaseSectionComponent from './BaseSectionComponent';
-import AnalyticsSuiteService from '../../../services/AnalyticsSuite/AnalyticsSuite_service';
+import AnalyticsSuiteService from '../../../services/AnalyticsSuite_service';
 
 const GlobalFreightSection = ({ onBack, isAdmin, data = [], onDataUpdate, loading }) => {
   const predefinedOptions = [

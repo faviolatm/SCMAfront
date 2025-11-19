@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import PartLookupService from '../../../../services/AnalyticsSuite/InsightEdge/PartLookupService';
+import PartLookupService from '../../../../services/InsightEdge/PartLookupService';
 
 /**
  * Custom hook for Part Lookup functionality

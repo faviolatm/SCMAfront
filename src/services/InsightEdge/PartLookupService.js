@@ -4,7 +4,7 @@
  * Change INSIGHTEDGE_API value for different environments (dev, staging, production)
  */
 const API_CONFIG = {
-  BASE_URL: 'http://127.0.0.1:8000/analytics',
+  BASE_URL: 'http://lms.tycoelectronics.net/analytics',
   INSIGHTEDGE_PREFIX: '/insightedge/insightedge/api',
 };
 
