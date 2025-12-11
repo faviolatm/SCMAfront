@@ -1,7 +1,7 @@
 // services/AnalyticsDashboardService.js
 import UserService from "../UserService";
 
-const API_BASE_URL = 'http://127.0.0.1:8000/analytics/analytics-access';
+const API_BASE_URL = 'http://aw01tglappd001.tycoelectronics.net/analytics/analytics-access';
 
 class AnalyticsDashboardService {
 
