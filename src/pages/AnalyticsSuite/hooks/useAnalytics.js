@@ -1,23 +1,27 @@
 // hooks/useAnalytics.js
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AnalyticsDashboardService from '../../../services/AnalyiticsDashboards/Analytics_dashboards';
 import AnalyticsSuiteService from '../../../services/AnalyticsSuite_service';
 
+/**
+ * Custom hook para manejar la lógica de Analytics Suite
+ * Maneja navegación, permisos de admin, y carga de dashboards
+ */
 export const useAnalytics = () => {
   const navigate = useNavigate();
+  
+  // ==================== STATE ====================
   const [currentView, setCurrentView] = useState('main');
   const [currentSection, setCurrentSection] = useState(null);
   const [analyticsData, setAnalyticsData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
- 
-  // 🔹 NUEVOS - Estados de autenticación
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [userInfo, setUserInfo] = useState(null);
-  const [token, setToken] = useState(null);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
 
-  // Opciones BI (ahora públicas)
+  // ==================== STATIC OPTIONS ====================
+  
   const allBIOptions = useMemo(() => [
     { name: 'Global Freight', color: 'slate-800' },
     { name: 'DC Quality & Operations', color: 'slate-800' },
@@ -26,7 +30,6 @@ export const useAnalytics = () => {
     { name: 'Global Planning & ESH', color: 'slate-800' }
   ], []);
 
-  // Opciones AI (ahora públicas)
   const allAIOptions = useMemo(() => [
     { 
       name: 'InsightEdge', 
@@ -36,175 +39,262 @@ export const useAnalytics = () => {
     }
   ], []);
 
-  // 🔹 NUEVO - Verificar autenticación y permisos
-  const checkAuthStatus = useCallback(async () => {
-    const storedToken = localStorage.getItem('analytics_token');
+  // ==================== ADMIN CHECK ====================
+  
+  /**
+   * Verifica si el usuario actual es admin
+   * Se ejecuta solo una vez al montar el componente
+   */
+  const checkAdminStatus = useCallback(async () => {
+    console.log('🔍 ===== CHECKING ADMIN STATUS =====');
+    setCheckingAdmin(true);
     
-    if (storedToken) {
-      setToken(storedToken);
-      setIsAuthenticated(true);
+    try {
+      console.log('🔍 Calling AnalyticsSuiteService.checkAdmin()...');
+      const result = await AnalyticsSuiteService.checkAdmin();
       
-      // Verificar si es admin
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/analytics-suite/admin/check`, {
-          headers: {
-            'Authorization': `Bearer ${storedToken}`
-          }
-        });
-        const data = await response.json();
-        setIsAdmin(data.is_admin);
-        setUserInfo({ user_id: data.user_id });
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-        setIsAdmin(false);
+      console.log('🔍 Admin check response:', result);
+      console.log('🔍 User ID:', result.user_id);
+      console.log('🔍 Is Admin:', result.is_admin);
+      
+      setIsAdmin(result.is_admin || false);
+      
+      if (result.is_admin) {
+        console.log('✅ Admin check: IS ADMIN');
+      } else {
+        console.log('❌ Admin check: NOT ADMIN');
       }
-    } else {
-      setIsAuthenticated(false);
+      
+    } catch (error) {
+      console.error('❌ Error checking admin status:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
       setIsAdmin(false);
-      setToken(null);
-      setUserInfo(null);
+    } finally {
+      setCheckingAdmin(false);
+      console.log('🔍 ===== ADMIN CHECK COMPLETE =====');
     }
   }, []);
 
-  // 🔹 Verificar autenticación al cargar
+  // Verificar admin al montar
   useEffect(() => {
-    checkAuthStatus();
-    setLoading(false);
-  }, [checkAuthStatus]);
+    console.log('🚀 useAnalytics mounted, checking admin...');
+    checkAdminStatus();
+  }, [checkAdminStatus]);
 
-  // 🔹 MODIFICADO - Cargar datos de sección (ahora público, pero pasa token si existe)
+  // ==================== DATA LOADING ====================
+  
+  /**
+   * Carga los dashboards de una sección desde la BD
+   */
   const loadSectionData = useCallback(async (sectionName = currentSection) => {
-    if (!sectionName) return;
+    if (!sectionName) {
+      console.warn('⚠️ loadSectionData called without section name');
+      return;
+    }
+    
+    console.log(`📊 ===== LOADING SECTION DATA =====`);
+    console.log(`📊 Section: ${sectionName}`);
     
     setLoading(true);
     setError(null);
-   
+    
     try {
-      // Las URLs son públicas, no necesita autenticación
-      const response = await AnalyticsSuiteService.getUrlsBySection(sectionName);
+      console.log(`📊 Calling AnalyticsDashboardService.getUrlsBySection("${sectionName}")...`);
+      
+      const response = await AnalyticsDashboardService.getUrlsBySection(sectionName);
+      
+      console.log(`📊 Response received:`, response);
+      console.log(`📊 Number of dashboards: ${response?.length || 0}`);
+      
+      if (response && response.length > 0) {
+        console.log(`📊 First dashboard:`, response[0]);
+        console.log(`📊 Has image_url: ${!!response[0]?.image_url}`);
+        console.log(`📊 Has has_image: ${!!response[0]?.has_image}`);
+      }
+      
       setAnalyticsData(response || []);
+      console.log('✅ Section data loaded successfully');
+      
     } catch (error) {
-      console.error('Error loading section data:', error);
-      setError(error.message || 'Error loading data');
+      console.error('❌ Error loading section data:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
+      setError(error.message || 'Error loading dashboards');
       setAnalyticsData([]);
     } finally {
       setLoading(false);
+      console.log('📊 ===== SECTION DATA LOADING COMPLETE =====');
     }
   }, [currentSection]);
 
-  // Cargar datos cuando cambia la sección
+  /**
+   * Refresca los datos de la sección actual
+   */
+  const handleDataUpdate = useCallback(async () => {
+    if (!currentSection) {
+      console.warn('⚠️ handleDataUpdate called but no section selected');
+      return;
+    }
+    
+    console.log(`🔄 ===== REFRESHING DATA =====`);
+    console.log(`🔄 Section: ${currentSection}`);
+    
+    await loadSectionData(currentSection);
+    
+    console.log('🔄 ===== REFRESH COMPLETE =====');
+  }, [currentSection, loadSectionData]);
+
+  // Auto-cargar datos cuando cambia la sección
   useEffect(() => {
     if (currentSection && currentView === 'section') {
+      console.log(`🔄 Section or view changed, loading data...`);
+      console.log(`🔄 Current section: ${currentSection}`);
+      console.log(`🔄 Current view: ${currentView}`);
       loadSectionData();
     }
   }, [currentSection, currentView, loadSectionData]);
 
-  // 🔹 MODIFICADO - Manejar clic en opción BI (ahora público)
-  const handleBIOptionClick = useCallback((optionName) => {
-    setCurrentSection(optionName);
-    setCurrentView('section');
-    setLoading(true);
-    setError(null);
-    setAnalyticsData([]);
-  }, []);
+  // ==================== NAVIGATION HANDLERS ====================
 
-  // 🔹 MODIFICADO - Manejar clic en opción AI (ahora público)
-  const handleAIOptionClick = useCallback((optionName) => {
-    // Buscar la ruta de la opción seleccionada
-    const selectedOption = allAIOptions.find(opt => opt.name === optionName);
-    
-    if (selectedOption && selectedOption.route) {
-      // Navegar a la ruta específica de la aplicación AI
-      navigate(selectedOption.route);
-    } else {
-      // Si no hay ruta definida, mostrar error
-      setError('Ruta no configurada para esta opción');
-    }
-  }, [navigate, allAIOptions]);
-
-  // 🔹 MODIFICADO - Manejar clic en AI card (ahora público)
-  const handleAIClick = useCallback(() => {
-    setCurrentView('ai');
-    setAnalyticsData([]);
-    setCurrentSection(null);
-    setError(null);
-  }, []);
-
-  // 🔹 MODIFICADO - Manejar clic en BI (ahora público)
-  const handleBIClick = useCallback(() => {
-    setCurrentView('bi');
-    setAnalyticsData([]);
-    setCurrentSection(null);
-    setError(null);
-  }, []);
- 
-  // Funciones de navegación (sin cambios)
+  /**
+   * Navega a la vista principal (cards de BI y AI)
+   */
   const handleBackToMain = useCallback(() => {
+    console.log('🔙 Navigating back to main view');
     setCurrentView('main');
     setCurrentSection(null);
     setAnalyticsData([]);
     setError(null);
   }, []);
- 
+
+  /**
+   * Navega a la lista de opciones BI
+   */
+  const handleBIClick = useCallback(() => {
+    console.log('🎯 BI card clicked');
+    setCurrentView('bi');
+    setAnalyticsData([]);
+    setCurrentSection(null);
+    setError(null);
+  }, []);
+
+  /**
+   * Navega a la lista de opciones AI
+   */
+  const handleAIClick = useCallback(() => {
+    console.log('🎯 AI card clicked');
+    setCurrentView('ai');
+    setAnalyticsData([]);
+    setCurrentSection(null);
+    setError(null);
+  }, []);
+
+  /**
+   * Regresa a la lista de opciones BI
+   */
   const handleBackToBIOptions = useCallback(() => {
+    console.log('🔙 Navigating back to BI options');
     setCurrentView('bi');
     setCurrentSection(null);
     setAnalyticsData([]);
     setError(null);
   }, []);
 
+  /**
+   * Regresa a la lista de opciones AI
+   */
   const handleBackToAIOptions = useCallback(() => {
+    console.log('🔙 Navigating back to AI options');
     setCurrentView('ai');
     setCurrentSection(null);
     setAnalyticsData([]);
     setError(null);
   }, []);
 
-  // 🔹 MODIFICADO - Función para actualizar datos
-  const handleDataUpdate = useCallback(() => {
-    if (currentSection) {
-      loadSectionData();
-    }
-  }, [loadSectionData, currentSection]);
-
-  // 🔹 NUEVO - Función para logout
-  const handleLogout = useCallback(() => {
-    localStorage.removeItem('analytics_token');
-    setIsAuthenticated(false);
-    setIsAdmin(false);
-    setToken(null);
-    setUserInfo(null);
-    window.location.reload();
+  /**
+   * Maneja el clic en una opción BI (carga sus dashboards)
+   */
+  const handleBIOptionClick = useCallback((optionName) => {
+    console.log(`🎯 ===== BI OPTION CLICKED =====`);
+    console.log(`🎯 Option: ${optionName}`);
+    
+    setCurrentSection(optionName);
+    setCurrentView('section');
+    setLoading(true);
+    setError(null);
+    setAnalyticsData([]);
+    
+    console.log(`🎯 State updated, will load section data...`);
   }, []);
 
+  /**
+   * Maneja el clic en una opción AI (navega a su ruta)
+   */
+  const handleAIOptionClick = useCallback((optionName) => {
+    console.log(`🎯 ===== AI OPTION CLICKED =====`);
+    console.log(`🎯 Option: ${optionName}`);
+    
+    const selectedOption = allAIOptions.find(opt => opt.name === optionName);
+    
+    if (selectedOption?.route) {
+      console.log(`🎯 Navigating to: ${selectedOption.route}`);
+      navigate(selectedOption.route);
+    } else {
+      console.error('❌ No route configured for:', optionName);
+      setError('Route not configured for this option');
+    }
+  }, [navigate, allAIOptions]);
+
+  // ==================== DEBUG INFO ON STATE CHANGES ====================
+  
+  useEffect(() => {
+    console.log('📊 ===== STATE UPDATE =====');
+    console.log('📊 Current View:', currentView);
+    console.log('📊 Current Section:', currentSection);
+    console.log('📊 Is Admin:', isAdmin);
+    console.log('📊 Checking Admin:', checkingAdmin);
+    console.log('📊 Loading:', loading);
+    console.log('📊 Data Count:', analyticsData.length);
+    console.log('📊 Error:', error);
+    console.log('📊 =====================');
+  }, [currentView, currentSection, isAdmin, checkingAdmin, loading, analyticsData, error]);
+
+  // ==================== RETURN ====================
+
   return {
-    // Estados básicos
+    // View state
     currentView,
     currentSection,
-    biOptions: allBIOptions, // 🔹 Ahora siempre disponibles
-    aiOptions: allAIOptions, // 🔹 Ahora siempre disponibles
-    isAdmin, // 🔹 Ahora viene del backend
+    
+    // Options
+    biOptions: allBIOptions,
+    aiOptions: allAIOptions,
+    
+    // Data state
     analyticsData,
     loading,
     error,
-   
-    // 🔹 NUEVOS - Estados de autenticación
-    isAuthenticated,
-    userInfo,
-    token,
-   
-    // Funciones de navegación
-    handleAIClick,
+    
+    // Admin state
+    isAdmin,
+    checkingAdmin,
+    
+    // Navigation handlers
+    handleBackToMain,
     handleBIClick,
+    handleAIClick,
     handleBIOptionClick,
     handleAIOptionClick,
-    handleBackToMain,
     handleBackToBIOptions,
     handleBackToAIOptions,
+    
+    // Data handlers
     handleDataUpdate,
-   
-    // 🔹 NUEVAS - Funciones adicionales
-    handleLogout,
-    checkAuthStatus
+    loadSectionData
   };
 };

@@ -1,349 +1,180 @@
-// services/AnalyticsSuite/AnalyticsSuite_service.js
+// services/AnalyticsSuiteService.js
+import UserService from './UserService';
 
+const API_BASE_URL = 'http://127.0.0.1:8000/analytics';
+
+/**
+ * AnalyticsSuiteService
+ * Maneja PERMISOS y ACCESO al Analytics Suite
+ * Conecta con: /analytics (JSON-based permissions)
+ */
 class AnalyticsSuiteService {
-  static BASE_URL = process.env.REACT_APP_API_URL || 'http://lms.tycoelectronics.net';
 
-  /**
-   * Construye URLs completas
-   * @param {string} endpoint - Endpoint específico
-   * @returns {string} URL completa
-   */
-  static buildUrl(endpoint) {
-    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    return `${this.BASE_URL}${cleanEndpoint}`;
-  }
-
-  /**
-   * Get token from localStorage
-   * @returns {string|null} Token or null
-   */
-  static getToken() {
-    return localStorage.getItem('analytics_token');
-  }
-
-  /**
-   * Build headers with token if available
-   * @returns {Object} Headers object
-   */
   static getHeaders() {
-    const headers = {
-      'Content-Type': 'application/json'
-    };
-
-    const token = this.getToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    return headers;
+    return UserService.addUserHeader().headers;
   }
 
-  // ==================== PUBLIC ENDPOINTS (No authentication required) ====================
+  // ==================== PERMISOS Y ACCESO ====================
 
   /**
-   * Get Analytics Suite main information - PUBLIC
-   * @returns {Promise<Object>} Main info
+   * Get complete Analytics Suite info: main_access + cards
+   * @returns {Promise<Object>} { user_id, main_access, main_access_info, cards, total_cards }
    */
-  static async getAnalyticsSuiteInfo() {
+  static async getSuite() {
     try {
-      const url = this.buildUrl('/analytics/analytics-suite/info');
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/suite`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: this.getHeaders()
       });
-
+      
       if (response.ok) {
         return await response.json();
-      } else {
-        console.error('❌ Error fetching analytics info:', response.status);
-        return null;
       }
+      
+      console.error('❌ Error getting suite:', response.status);
+      return null;
     } catch (error) {
-      console.error('💥 Error fetching analytics info:', error);
+      console.error('💥 Error getting suite:', error);
       return null;
     }
   }
 
   /**
-   * Get all dashboards organized by section - PUBLIC
-   * @returns {Promise<Object>} Dashboards by section
+   * Get only cards available for user
+   * @returns {Promise<Object>} { cards: [] }
    */
-  static async getAllDashboards() {
+  static async getCards() {
     try {
-      const url = this.buildUrl('/analytics/analytics-suite/dashboards');
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/cards`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: this.getHeaders()
       });
-
-      if (response.ok) {
-        return await response.json();
-      } else {
-        console.error('❌ Error fetching dashboards:', response.status);
-        return {};
-      }
-    } catch (error) {
-      console.error('💥 Error fetching dashboards:', error);
-      return {};
-    }
-  }
-
-  /**
-   * Get all available sections - PUBLIC
-   * @returns {Promise<Array>} Array of section names
-   */
-  static async getAllSections() {
-    try {
-      const url = this.buildUrl('/analytics/analytics-suite/sections');
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      if (response.ok) {
-        return await response.json();
-      } else {
-        console.error('❌ Error fetching sections:', response.status);
-        return [];
-      }
-    } catch (error) {
-      console.error('💥 Error fetching sections:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Get URLs for a specific section - PUBLIC
-   * @param {string} section - Section name
-   * @returns {Promise<Array>} Array of URLs
-   */
-  static async getUrlsBySection(section) {
-    try {
-      const url = this.buildUrl(`/analytics/analytics-suite/urls/${encodeURIComponent(section)}`);
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      if (response.ok) {
-        return await response.json();
-      } else {
-        console.error('❌ Error fetching URLs for section:', response.status);
-        return [];
-      }
-    } catch (error) {
-      console.error('💥 Error fetching URLs:', error);
-      return [];
-    }
-  }
-
-  // ==================== ADMIN ENDPOINTS (Authentication required) ====================
-
-  /**
-   * Check if current user has admin access
-   * @returns {Promise<Object>} Admin info { is_admin: boolean, user_id: string }
-   */
-  static async checkAdminAccess() {
-    try {
-      const token = this.getToken();
       
-      if (!token) {
-        return { is_admin: false, user_id: null };
+      if (response.ok) {
+        return await response.json();
       }
+      
+      return { cards: [] };
+    } catch (error) {
+      console.error('💥 Error getting cards:', error);
+      return { cards: [] };
+    }
+  }
 
-      const url = this.buildUrl('/analytics/analytics-suite/admin/check');
+  /**
+   * Check if user has access to Analytics Suite
+   * @returns {Promise<Object>} { user_id, has_access }
+   */
+  static async checkAdmin() {
+    console.log('🔍 ===== checkAdmin() START =====');
+    
+    try {
+      const url = `${API_BASE_URL}/admin/check`;
+      console.log('🔍 URL:', url);
+      
+      const headers = this.getHeaders();
+      console.log('🔍 Sending request with headers:', headers);
+      
       const response = await fetch(url, {
+        method: 'GET',
+        headers: headers
+      });
+      
+      console.log('🔍 Response status:', response.status);
+      console.log('🔍 Response ok:', response.ok);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔍 Response data:', data);
+        console.log('🔍 ===== checkAdmin() SUCCESS =====');
+        return data;
+      }
+      
+      console.warn('⚠️ Response not OK:', response.status);
+      console.log('🔍 ===== checkAdmin() FAILED =====');
+      return { user_id: 'unknown', is_admin: false };
+      
+    } catch (error) {
+      console.error('💥 checkAdmin() ERROR:', error);
+      console.error('💥 Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
+      console.log('🔍 ===== checkAdmin() ERROR =====');
+      return { user_id: 'unknown', is_admin: false };
+    }
+  }
+
+  /**
+   * Check if Analytics Suite should show in menu
+   * @returns {Promise<Object>} { user_id, has_access, show_in_menu }
+   */
+  static async checkMenuAccess() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/menu-access`, {
         method: 'GET',
         headers: this.getHeaders()
       });
-
+      
       if (response.ok) {
         return await response.json();
-      } else if (response.status === 401 || response.status === 403) {
-        return { is_admin: false, user_id: null };
-      } else {
-        console.error('❌ Error checking admin access:', response.status);
-        return { is_admin: false, user_id: null };
       }
+      
+      return { user_id: 'unknown', has_access: false, show_in_menu: false };
     } catch (error) {
-      console.error('💥 Error checking admin access:', error);
-      return { is_admin: false, user_id: null };
+      console.error('💥 Error checking menu access:', error);
+      return { user_id: 'unknown', has_access: false, show_in_menu: false };
     }
   }
 
   /**
-   * Get all dashboards including inactive ones - ADMIN ONLY
-   * @returns {Promise<Object>} All dashboards
+   * Check if current user is admin (backend validation)
+   * @returns {Promise<Object>} { user_id, is_admin }
    */
-  static async getAllDashboardsAdmin() {
+  static async checkAdmin() {
     try {
-      const url = this.buildUrl('/analytics/analytics-suite/admin/dashboards');
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/admin/check`, {
         method: 'GET',
         headers: this.getHeaders()
       });
-
+      
       if (response.ok) {
         return await response.json();
-      } else if (response.status === 403) {
-        throw new Error('You do not have admin permissions');
-      } else {
-        console.error('❌ Error fetching admin dashboards:', response.status);
-        return {};
       }
+      
+      return { user_id: 'unknown', is_admin: false };
     } catch (error) {
-      console.error('💥 Error fetching admin dashboards:', error);
-      throw error;
+      console.error('💥 Error checking admin:', error);
+      return { user_id: 'unknown', is_admin: false };
     }
   }
 
   /**
-   * Update URL for a specific option - ADMIN ONLY
-   * @param {string} section - Section name
-   * @param {string} optionName - Option name
-   * @param {string} url - New URL
-   * @param {string} description - Optional description
-   * @param {string} icon - Optional icon
-   * @returns {Promise<boolean>} Success status
+   * Check if current user is admin (local validation)
+   * @returns {boolean}
    */
-  static async updateUrl(section, optionName, url, description = null, icon = null) {
-    try {
-      const requestData = {
-        section: section,
-        option_name: optionName,
-        url: url
-      };
-
-      if (description !== null) {
-        requestData.description = description;
-      }
-
-      if (icon !== null) {
-        requestData.icon = icon;
-      }
-
-      const response = await fetch(this.buildUrl('/analytics/analytics-suite/admin/dashboard'), {
-        method: 'PUT',
-        headers: this.getHeaders(),
-        body: JSON.stringify(requestData)
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ URL updated:', result);
-        return true;
-      } else if (response.status === 403) {
-        console.error('❌ You do not have admin permissions');
-        alert('You do not have admin permissions to update URLs');
-        return false;
-      } else {
-        const error = await response.json();
-        console.error('❌ Failed to update URL:', error.detail || 'Unknown error');
-        return false;
-      }
-    } catch (error) {
-      console.error('💥 Error updating URL:', error);
-      return false;
-    }
+  static isAdminUser() {
+    const adminUsers = [
+      'TE605135',
+      'TE407929', 
+      'TE589552',
+      'TE535073',
+      'TE588075'
+    ];
+    
+    return adminUsers.includes(UserService.getCurrentUserId());
   }
 
-  /**
-   * Add a new dashboard - ADMIN ONLY
-   * @param {string} section - Section name
-   * @param {string} optionName - Option name
-   * @param {string} url - URL
-   * @param {string} description - Optional description
-   * @param {string} icon - Optional icon
-   * @returns {Promise<Object>} Result object
-   */
-  static async addDashboard(section, optionName, url, description = '', icon = '') {
-    try {
-      const requestData = {
-        section: section,
-        option_name: optionName,
-        url: url,
-        description: description,
-        icon: icon
-      };
-
-      const response = await fetch(this.buildUrl('/analytics/analytics-suite/admin/dashboard'), {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify(requestData)
-      });
-
-      if (response.ok) {
-        return await response.json();
-      } else if (response.status === 403) {
-        throw new Error('You do not have admin permissions');
-      } else {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to add dashboard');
-      }
-    } catch (error) {
-      console.error('💥 Error adding dashboard:', error);
-      throw error;
-    }
-  }
+  // ==================== UTILITIES ====================
 
   /**
-   * Delete (deactivate) a dashboard - ADMIN ONLY
-   * @param {string} section - Section name
-   * @param {string} optionName - Option name
-   * @returns {Promise<Object>} Result object
-   */
-  static async deleteDashboard(section, optionName) {
-    try {
-      const requestData = {
-        section: section,
-        option_name: optionName
-      };
-
-      const response = await fetch(this.buildUrl('/analytics/analytics-suite/admin/dashboard'), {
-        method: 'DELETE',
-        headers: this.getHeaders(),
-        body: JSON.stringify(requestData)
-      });
-
-      if (response.ok) {
-        return await response.json();
-      } else if (response.status === 403) {
-        throw new Error('You do not have admin permissions');
-      } else {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to delete dashboard');
-      }
-    } catch (error) {
-      console.error('💥 Error deleting dashboard:', error);
-      throw error;
-    }
-  }
-
-  // ==================== UTILITY METHODS ====================
-
-  /**
-   * Check if user is currently authenticated
-   * @returns {boolean} Is authenticated
-   */
-  static isAuthenticated() {
-    return !!this.getToken();
-  }
-
-  /**
-   * Logout - Remove token
-   */
-  static logout() {
-    localStorage.removeItem('analytics_token');
-  }
-
-  /**
-   * URLs para imágenes (si las necesitas)
-   * @returns {Object} URLs de imágenes
+   * Get image URLs for AI and BI cards
+   * @returns {Object}
    */
   static getImageUrls() {
     return {
-      ai: this.buildUrl('/analytics/images/AI.webp'),
-      bi: this.buildUrl('/analytics/images/BI.webp')
+      ai: `${API_BASE_URL}/images/AI.webp`,
+      bi: `${API_BASE_URL}/images/BI.webp`
     };
   }
 }

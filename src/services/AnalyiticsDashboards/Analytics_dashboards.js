@@ -1,274 +1,127 @@
-import UserService from '../UserService';
+// services/AnalyticsDashboardService.js
+import UserService from "../UserService";
 
-const API_BASE_URL = 'http://lms.tycoelectronics.net/analytics/analytics-access';
+const API_BASE_URL = 'http://127.0.0.1:8000/analytics/analytics-access';
 
-class AnalyticsAccessService {
+class AnalyticsDashboardService {
 
-  /**
-   * Check if Analytics Suite option should appear in main menu
-   * @returns {Promise<Object>} Menu access response
-   */
-  static async checkMenuAccess() {
+  static getHeaders() {
+    return {
+      ...UserService.addUserHeader().headers,
+      'Content-Type': 'application/json'
+    };
+  }
+
+  // ==================== READ ====================
+
+  static async getUrlsBySection(section) {
     try {
-      const currentUserId = UserService.getCurrentUserId();
-      const url = `${API_BASE_URL}/menu-access`; 
-      const headers = UserService.addUserHeader().headers;
-      
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/urls/${encodeURIComponent(section)}`, {
         method: 'GET',
-        headers: headers
+        headers: this.getHeaders()
       });
-      
+
       if (response.ok) {
         const result = await response.json();
-        return result;
-      } else {
-        console.error('❌ Error checking menu access:', response.status);
-        return {
-          user_id: currentUserId || 'unknown',
-          has_access: false,
-          show_in_menu: false
-        };
+        console.log(`✅ Fetched ${result.urls?.length || 0} dashboards for section: ${section}`);
+        
+        // 🔹 Ahora cada URL tiene image_url y has_image
+        return result.urls || [];
       }
+      return [];
     } catch (error) {
-      console.error('💥 Error checking menu access:', error);
-      return {
-        user_id: 'unknown',
-        has_access: false,
-        show_in_menu: false
-      };
+      console.error('💥 Error fetching URLs:', error);
+      return [];
     }
   }
 
-  /**
-   * Check if user has access to Analytics Suite
-   * @returns {Promise<Object>} Access check response
-   */
-  static async checkAccess() {
-    try {
-      const currentUserId = UserService.getCurrentUserId();   
-      const url = `${API_BASE_URL}/access-check`;
-      const headers = UserService.addUserHeader().headers;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: headers
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        return result;
-      } else {
-        console.error('❌ Error checking access:', response.status);
-        return {
-          user_id: currentUserId || 'unknown',
-          has_access: false
-        };
-      }
-    } catch (error) {
-      console.error('💥 Error checking access:', error);
-      return {
-        user_id: 'unknown',
-        has_access: false
-      };
-    }
-  }
+  // ==================== CREATE ====================
 
-  /**
-   * Get complete Analytics Suite information for user
-   * @returns {Promise<Object>} Complete suite data
-   */
-  static async getSuite() {
+  static async createDashboard(section, optionName, url, imageName = null) {
     try {
-      const currentUserId = UserService.getCurrentUserId();    
-      const url = `${API_BASE_URL}/suite`;
-      const headers = UserService.addUserHeader().headers;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: headers
+      const response = await fetch(`${API_BASE_URL}/urls`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify({
+          section: section,
+          option_name: optionName,
+          url: url,
+          image_name: imageName  // 🔹 NUEVO (opcional)
+        })
       });
-      
+
       if (response.ok) {
         const result = await response.json();
-        return result;
-      } else {
-        console.error('❌ Error getting suite data:', response.status);
-        if (response.status === 403) {
-          return {
-            error: 'Usuario no autorizado para acceder a Analytics Suite',
-            user_id: currentUserId || 'unknown',
-            main_access: null,
-            cards: [],
-            total_cards: 0
-          };
-        }
+        console.log('✅ Dashboard created:', result);
+        return result.dashboard;
+      } else if (response.status === 400) {
+        alert('Dashboard already exists');
+        return null;
+      } else if (response.status === 403) {
+        alert('You do not have admin permissions');
         return null;
       }
+      return null;
     } catch (error) {
-      console.error('💥 Error getting suite data:', error);
+      console.error('💥 Error creating dashboard:', error);
       return null;
     }
   }
 
-  /**
-   * Get only the cards available for user
-   * @returns {Promise<Object>} Cards data
-   */
-  static async getCards() {
+  // ==================== UPDATE ====================
+
+  static async updateUrl(section, optionName, url, imageName = null) {
     try {
-      const currentUserId = UserService.getCurrentUserId();     
-      const url = `${API_BASE_URL}/cards`;
-      const headers = UserService.addUserHeader().headers;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: headers
+      const response = await fetch(`${API_BASE_URL}/urls`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify({
+          section: section,
+          option_name: optionName,
+          url: url,
+          image_name: imageName  // 🔹 NUEVO (opcional)
+        })
       });
-      
+
       if (response.ok) {
-        const result = await response.json();
-        return result;
-      } else {
-        console.error('❌ Error getting cards:', response.status);
-        if (response.status === 403) {
-          return {
-            error: 'Usuario no autorizado para acceder a Analytics Suite',
-            cards: []
-          };
+        console.log('✅ URL updated');
+        return true;
+      } else if (response.status === 403) {
+        alert('You do not have admin permissions');
+        return false;
+      } else if (response.status === 404) {
+        alert('Dashboard not found');
+        return false;
+      }
+      return false;
+    } catch (error) {
+      console.error('💥 Error updating URL:', error);
+      return false;
+    }
+  }
+
+  // ==================== DELETE ====================
+
+  static async deleteDashboard(section, optionName) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/urls?section=${encodeURIComponent(section)}&option_name=${encodeURIComponent(optionName)}`, 
+        {
+          method: 'DELETE',
+          headers: this.getHeaders()
         }
-        return {
-          cards: []
-        };
-      }
-    } catch (error) {
-      console.error('💥 Error getting cards:', error);
-      return {
-        cards: []
-      };
-    }
-  }
+      );
 
-  /**
-   * Reload configuration on backend
-   * @returns {Promise<Object>} Reload response
-   */
-  static async reloadConfig() {
-    try {
-      const currentUserId = UserService.getCurrentUserId();    
-      const url = `${API_BASE_URL}/config/reload`;
-      const headers = UserService.addUserHeader().headers;
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: headers
-      });
-      
       if (response.ok) {
-        const result = await response.json();
-        return result;
-      } else {
-        console.error('❌ Error reloading config:', response.status);
-        return {
-          error: 'Error al recargar configuración',
-          message: '',
-          reloaded_by: currentUserId || 'unknown'
-        };
+        console.log('✅ Dashboard deleted');
+        return true;
       }
+      return false;
     } catch (error) {
-      console.error('💥 Error reloading config:', error);
-      return {
-        error: 'Error de conexión al recargar configuración',
-        message: '',
-        reloaded_by: 'unknown'
-      };
+      console.error('💥 Error deleting dashboard:', error);
+      return false;
     }
-  }
-
-  /**
-   * Quick check if user has access (simpler method)
-   * @returns {Promise<boolean>} Has access
-   */
-  static async hasAccess() {
-    const result = await this.checkAccess();
-    return result.has_access || false;
-  }
-
-  /**
-   * Get main access info if user has permission
-   * @returns {Promise<Object|null>} Main access info or null
-   */
-  static async getMainAccessInfo() {
-    const suiteData = await this.getSuite();
-    return suiteData?.main_access || null;
-  }
-
-  /**
-   * Get cards array only
-   * @returns {Promise<Array>} Array of cards
-   */
-  static async getCardsArray() {
-    const cardsData = await this.getCards();
-    return cardsData.cards || [];
-  }
-
-  /**
-   * Check if user has access to specific card
-   * @param {string} cardKey - Key of the card to check
-   * @returns {Promise<boolean>} Has access to card
-   */
-  static async hasCardAccess(cardKey) {
-    const cards = await this.getCardsArray();
-    return cards.some(card => card.key === cardKey);
-  }
-
-  /**
-   * Check if user has BI card access
-   * @returns {Promise<boolean>} Has BI access
-   */
-  static async hasBIAccess() {
-    return await this.hasCardAccess('bi_card');
-  }
-
-  /**
-   * Check if user has AI card access
-   * @returns {Promise<boolean>} Has AI access
-   */
-  static async hasAIAccess() {
-    return await this.hasCardAccess('ai_card');
-  }
-
-  /**
-   * Get all access info in one call (most efficient)
-   * @returns {Promise<Object>} Complete access information
-   */
-  static async getAllAccessInfo() {
-    const suiteData = await this.getSuite();
-    
-    if (!suiteData || suiteData.error) {
-      return {
-        hasAccess: false,
-        mainAccess: null,
-        cards: [],
-        totalCards: 0,
-        hasBIAccess: false,
-        hasAIAccess: false,
-        error: suiteData?.error || 'Error getting access info'
-      };
-    }
-
-    const cards = suiteData.cards || [];
-    
-    return {
-      hasAccess: true,
-      mainAccess: suiteData.main_access,
-      cards: cards,
-      totalCards: suiteData.total_cards || cards.length,
-      hasBIAccess: cards.some(card => card.key === 'bi_card'),
-      hasAIAccess: cards.some(card => card.key === 'ai_card'),
-      userId: suiteData.user_id
-    };
   }
 }
 
-export default AnalyticsAccessService;
+export default AnalyticsDashboardService;
