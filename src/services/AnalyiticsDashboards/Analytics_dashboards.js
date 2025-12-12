@@ -23,14 +23,11 @@ class AnalyticsDashboardService {
 
       if (response.ok) {
         const result = await response.json();
-        console.log(`✅ Fetched ${result.urls?.length || 0} dashboards for section: ${section}`);
-        
-        // 🔹 Ahora cada URL tiene image_url y has_image
         return result.urls || [];
       }
       return [];
     } catch (error) {
-      console.error('💥 Error fetching URLs:', error);
+      console.error('Error fetching URLs:', error);
       return [];
     }
   }
@@ -46,13 +43,12 @@ class AnalyticsDashboardService {
           section: section,
           option_name: optionName,
           url: url,
-          image_name: imageName  // 🔹 NUEVO (opcional)
+          image_name: imageName
         })
       });
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ Dashboard created:', result);
         return result.dashboard;
       } else if (response.status === 400) {
         alert('Dashboard already exists');
@@ -63,7 +59,7 @@ class AnalyticsDashboardService {
       }
       return null;
     } catch (error) {
-      console.error('💥 Error creating dashboard:', error);
+      console.error('Error creating dashboard:', error);
       return null;
     }
   }
@@ -79,12 +75,11 @@ class AnalyticsDashboardService {
           section: section,
           option_name: optionName,
           url: url,
-          image_name: imageName  // 🔹 NUEVO (opcional)
+          image_name: imageName
         })
       });
 
       if (response.ok) {
-        console.log('✅ URL updated');
         return true;
       } else if (response.status === 403) {
         alert('You do not have admin permissions');
@@ -95,7 +90,7 @@ class AnalyticsDashboardService {
       }
       return false;
     } catch (error) {
-      console.error('💥 Error updating URL:', error);
+      console.error('Error updating URL:', error);
       return false;
     }
   }
@@ -113,12 +108,11 @@ class AnalyticsDashboardService {
       );
 
       if (response.ok) {
-        console.log('✅ Dashboard deleted');
         return true;
       }
       return false;
     } catch (error) {
-      console.error('💥 Error deleting dashboard:', error);
+      console.error('Error deleting dashboard:', error);
       return false;
     }
   }

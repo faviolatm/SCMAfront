@@ -6,9 +6,7 @@ export class UserService {
    * @returns {string} ID del usuario o 'N/A' si no está disponible
    */
   static getCurrentUserId() {
-    const userId = localStorage.getItem('dash_user') || 'N/A';
-    console.log('🔍 UserService.getCurrentUserId():', userId);
-    return userId;
+    return localStorage.getItem('dash_user') || 'N/A';
   }
 
   /**
@@ -16,9 +14,7 @@ export class UserService {
    * @returns {string} Warehouse o 'N/A' si no está disponible
    */
   static getCurrentWarehouse() {
-    const warehouse = localStorage.getItem('dash_warehouse') || 'N/A';
-    console.log('🔍 UserService.getCurrentWarehouse():', warehouse);
-    return warehouse;
+    return localStorage.getItem('dash_warehouse') || 'N/A';
   }
 
   /**
@@ -26,9 +22,7 @@ export class UserService {
    * @returns {string|null} JWT token o null si no está disponible
    */
   static getJwtToken() {
-    const token = localStorage.getItem('dash_token');
-    console.log('🔍 UserService.getJwtToken():', token ? 'EXISTS (length: ' + token.length + ')' : 'NULL');
-    return token;
+    return localStorage.getItem('dash_token');
   }
 
   /**
@@ -37,8 +31,6 @@ export class UserService {
    * @returns {Object} Opciones con los headers de usuario y JWT incluidos
    */
   static addUserHeader(options = {}) {
-    console.log('🔍 ===== UserService.addUserHeader() =====');
-    
     const userId = this.getCurrentUserId();
     const jwtToken = this.getJwtToken();
     
@@ -48,14 +40,6 @@ export class UserService {
       'X-User-ID': userId,
       ...(jwtToken && { 'Authorization': `Bearer ${jwtToken}` })
     };
-    
-    console.log('🔍 Headers created:', {
-      'X-User-ID': userId,
-      'Authorization': jwtToken ? 'Bearer [TOKEN]' : 'NOT SET',
-      'Content-Type': 'application/json'
-    });
-    
-    console.log('🔍 ===== End addUserHeader =====');
     
     return {
       ...options,

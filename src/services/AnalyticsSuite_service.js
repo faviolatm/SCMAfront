@@ -31,10 +31,10 @@ class AnalyticsSuiteService {
         return await response.json();
       }
       
-      console.error('❌ Error getting suite:', response.status);
+      console.error('Error getting suite:', response.status);
       return null;
     } catch (error) {
-      console.error('💥 Error getting suite:', error);
+      console.error('Error getting suite:', error);
       return null;
     }
   }
@@ -56,7 +56,7 @@ class AnalyticsSuiteService {
       
       return { cards: [] };
     } catch (error) {
-      console.error('💥 Error getting cards:', error);
+      console.error('Error getting cards:', error);
       return { cards: [] };
     }
   }
@@ -65,43 +65,21 @@ class AnalyticsSuiteService {
    * Check if user has access to Analytics Suite
    * @returns {Promise<Object>} { user_id, has_access }
    */
-  static async checkAdmin() {
-    console.log('🔍 ===== checkAdmin() START =====');
-    
+  static async checkAccess() {
     try {
-      const url = `${API_BASE_URL}/admin/check`;
-      console.log('🔍 URL:', url);
-      
-      const headers = this.getHeaders();
-      console.log('🔍 Sending request with headers:', headers);
-      
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/access`, {
         method: 'GET',
-        headers: headers
+        headers: this.getHeaders()
       });
-      
-      console.log('🔍 Response status:', response.status);
-      console.log('🔍 Response ok:', response.ok);
       
       if (response.ok) {
-        const data = await response.json();
-        console.log('🔍 Response data:', data);
-        console.log('🔍 ===== checkAdmin() SUCCESS =====');
-        return data;
+        return await response.json();
       }
       
-      console.warn('⚠️ Response not OK:', response.status);
-      console.log('🔍 ===== checkAdmin() FAILED =====');
-      return { user_id: 'unknown', is_admin: false };
-      
+      return { user_id: 'unknown', has_access: false };
     } catch (error) {
-      console.error('💥 checkAdmin() ERROR:', error);
-      console.error('💥 Error details:', {
-        message: error.message,
-        stack: error.stack
-      });
-      console.log('🔍 ===== checkAdmin() ERROR =====');
-      return { user_id: 'unknown', is_admin: false };
+      console.error('Error checking access:', error);
+      return { user_id: 'unknown', has_access: false };
     }
   }
 
@@ -122,7 +100,7 @@ class AnalyticsSuiteService {
       
       return { user_id: 'unknown', has_access: false, show_in_menu: false };
     } catch (error) {
-      console.error('💥 Error checking menu access:', error);
+      console.error('Error checking menu access:', error);
       return { user_id: 'unknown', has_access: false, show_in_menu: false };
     }
   }
@@ -144,7 +122,7 @@ class AnalyticsSuiteService {
       
       return { user_id: 'unknown', is_admin: false };
     } catch (error) {
-      console.error('💥 Error checking admin:', error);
+      console.error('Error checking admin:', error);
       return { user_id: 'unknown', is_admin: false };
     }
   }
