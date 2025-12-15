@@ -1,7 +1,7 @@
 // services/AnalyticsSuiteService.js
 import UserService from './UserService';
 
-const API_BASE_URL = 'http://aw01tglappd001.tycoelectronics.net/analytics';
+const API_BASE_URL = 'http://aw01tglappd001.tycoelectronics.net:8001/analytics';
 
 /**
  * AnalyticsSuiteService
