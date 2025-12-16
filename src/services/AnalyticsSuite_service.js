@@ -2,6 +2,7 @@
 import UserService from './UserService';
 
 const API_BASE_URL = 'http://aw01tglappd001.tycoelectronics.net:8081/analytics';
+const IMAGE_BASE_URL = 'http://aw01tglappd001.tycoelectronics.net:8081/analytics/images';
 
 /**
  * AnalyticsSuiteService
@@ -12,6 +13,34 @@ class AnalyticsSuiteService {
 
   static getHeaders() {
     return UserService.addUserHeader().headers;
+  }
+
+  // ==================== IMAGE URL HELPER ====================
+
+  /**
+   * Get image URL from image name
+   * @param {string} imageName - Name of the image file
+   * @returns {string|null} Complete image URL or null
+   */
+  static getImageUrl(imageName) {
+    if (!imageName) return null;
+    // Si ya es una URL completa, retornarla tal cual
+    if (imageName.startsWith('http://') || imageName.startsWith('https://')) {
+      return imageName;
+    }
+    // Si es solo el nombre del archivo, construir la URL completa
+    return `${IMAGE_BASE_URL}/${imageName}`;
+  }
+
+  /**
+   * Get image URLs for AI and BI cards
+   * @returns {Object}
+   */
+  static getImageUrls() {
+    return {
+      ai: this.getImageUrl('AI.webp'),
+      bi: this.getImageUrl('BI.webp')
+    };
   }
 
   // ==================== PERMISOS Y ACCESO ====================
@@ -141,19 +170,6 @@ class AnalyticsSuiteService {
     ];
     
     return adminUsers.includes(UserService.getCurrentUserId());
-  }
-
-  // ==================== UTILITIES ====================
-
-  /**
-   * Get image URLs for AI and BI cards
-   * @returns {Object}
-   */
-  static getImageUrls() {
-    return {
-      ai: `${API_BASE_URL}/images/AI.webp`,
-      bi: `${API_BASE_URL}/images/BI.webp`
-    };
   }
 }
 

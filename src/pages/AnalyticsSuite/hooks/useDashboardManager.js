@@ -28,13 +28,33 @@ export const useDashboardManager = (sectionName, data, useDatabase, onDataUpdate
 
     const dataArray = Array.isArray(data) ? data : [];
     
-    return dataArray.map(item => ({
-      name: item.option_name,
-      url: item.url || '',
-      imageUrl: item.image_url,
-      hasImage: item.has_image,
-      id: item.id
-    }));
+    // 🔍 DEBUG - Ver datos crudos
+    console.log('🔍 RAW DATA FROM BACKEND:', JSON.stringify(dataArray, null, 2));
+    
+    const mappedData = dataArray.map(item => {
+      // 🔍 DEBUG - Ver cada item
+      console.log('📦 Processing item:', {
+        option_name: item.option_name,
+        all_keys: Object.keys(item),
+        image_name: item.image_name,
+        image_url: item.image_url,
+        imageName: item.imageName
+      });
+      
+      const imageUrl = AnalyticsDashboardService.getImageUrl(item.image_name);
+      
+      return {
+        name: item.option_name,
+        url: item.url || '',
+        imageUrl: imageUrl,
+        hasImage: Boolean(item.image_name),
+        id: item.id
+      };
+    });
+    
+    console.log('✅ FINAL MAPPED DATA:', mappedData);
+    
+    return mappedData;
   };
 
   // ==================== NAVIGATION ====================

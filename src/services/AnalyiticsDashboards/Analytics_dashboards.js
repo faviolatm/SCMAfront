@@ -2,6 +2,7 @@
 import UserService from "../UserService";
 
 const API_BASE_URL = 'http://aw01tglappd001.tycoelectronics.net:8081/analytics/analytics-access';
+const IMAGE_BASE_URL = 'http://aw01tglappd001.tycoelectronics.net:8081/analytics/images';
 
 class AnalyticsDashboardService {
 
@@ -10,6 +11,23 @@ class AnalyticsDashboardService {
       ...UserService.addUserHeader().headers,
       'Content-Type': 'application/json'
     };
+  }
+
+  // ==================== IMAGE URL HELPER ====================
+
+  static getImageUrl(imageName) {
+    const result = !imageName ? null : 
+                   (imageName.startsWith('http://') || imageName.startsWith('https://')) ? imageName :
+                   `${IMAGE_BASE_URL}/${imageName}`;
+    
+    // 🔍 DEBUG - TEMPORAL
+    console.log('🖼️ getImageUrl called:', { 
+      imageName, 
+      result, 
+      IMAGE_BASE_URL 
+    });
+    
+    return result;
   }
 
   // ==================== READ ====================
