@@ -1,11 +1,24 @@
 // src/routes/MenuRoutes.js
-import AnalyticsSuite from '../pages/AnalyticsSuite/AnalyticsSuite';
+import EvaluationHome from '../pages/Evaluation/EvaluationHome';
+import EvaluationForm from '../pages/Evaluation/EvaluationForm';
+import EvaluationResults from '../pages/Evaluation/EvaluationResults';
 
 export const MenuRoutes = [
   {
-    path: '/analytics-suite',
-    title: "Analytics Suite",
-    component: AnalyticsSuite,
+    path: '/evaluations',
+    title: "Evaluaciones",
+    component: EvaluationHome,
   },
-  // Aquí puedes agregar más rutas después si necesitas
+  {
+    path: '/evaluation/:id',
+    title: "Realizar Evaluación",
+    component: EvaluationForm,
+    hideInMenu: true, // No mostrar en el menú, solo accesible por link directo
+  },
+  {
+    path: '/evaluation/:id/results',
+    title: "Resultados",
+    component: EvaluationResults,
+    hideInMenu: true, // No mostrar en el menú
+  },
 ];
