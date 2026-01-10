@@ -1,114 +1,112 @@
-import { Routes, Route } from 'react-router-dom';
-import PrivateRoute from './pages/PrivateRoute';
-import NotFound from './pages/NotFound';
-import Login from './pages/Auth/login';
+// src/routes/index.js
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-import { MenuRoutes } from './routes/MenuRoutes';
-import { DcRoutes } from './routes/Dashboards/DcRoutes';
-import { GlobalRoutes } from './routes/Dashboards/GlobalRoutes';
+// Pages
+import LoginPage from '../pages/Login/LoginPage';
+import EvaluationHome from '../pages/Evaluation/EvaluationHome';
+import EvaluationForm from '../pages/Evaluation/EvaluationForm';
+import EvaluationResults from '../pages/Evaluation/EvaluationResults';
+import NotFound from '../pages/NotFound';
 
-import DashboardLayout from './components/General/DashboardLayout';
-import DcMenu from './pages/Dashboards/DC/DcMenu';
-import DashboardMenu from './pages/Dashboards/dash_menu';
-import MenuTEOA from './pages/TEOA/teoa_menu';
+// =============================================
+// Protected Route Component
+// =============================================
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
 
-// ✅ Lista centralizada de usuarios bloqueados
-const BLOCKED_USERS = ['AUTL30TE','IND-CR','TEmpAUT', 'TucAUT23'];
+  // Mostrar loading mientras verifica autenticación
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-16 h-16 border-4 border-gray-700 border-t-orange-500 rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-300 font-semibold text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-const AppRoutes = () => (
-  <Routes>
-    <Route path="/Login" element={<Login />} />
+  // Si no está autenticado, redirigir a login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
-    <Route
-      path="/Dashboards"
-      element={
-        <PrivateRoute
-          usersBlocked={BLOCKED_USERS}
-          element={
-            <DashboardLayout title="Dashboards" transparent={true}>
-              <DashboardMenu />
-            </DashboardLayout>
-          }
-        />
-      }
-    />
+  return children;
+};
 
-    <Route
-      path="/teoa"
-      element={
-        <PrivateRoute
-          element={
-            <DashboardLayout title="TEOA" transparent={true}>
-              <MenuTEOA />
-            </DashboardLayout>
-          }
-        />
-      }
-    />
+// =============================================
+// Main Routes
+// =============================================
+const AppRoutes = () => {
+  const { isAuthenticated, loading } = useAuth();
 
-    {MenuRoutes.map(({ path, title, component: Component }) => {
-      // EXCEPCIÓN: Solo para /Crossdock permites a IND-CR
-      const EXCEPTION_PATHS = ['/Crossdock', '/Menu'];
-      const exceptionUsersAllowed = EXCEPTION_PATHS.includes(path) ? BLOCKED_USERS : undefined;
+  // Si está cargando, mostrar pantalla de loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-16 h-16 border-4 border-gray-700 border-t-orange-500 rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-300 font-semibold text-lg">Initializing...</p>
+        </div>
+      </div>
+    );
+  }
 
-      return (
-        <Route
-          key={path}
-          path={path}
-          element={
-            <PrivateRoute
-              requiredRoles={[]}
-              usersBlocked={BLOCKED_USERS}
-              exceptionUsersAllowed={exceptionUsersAllowed}
-              element={
-                <DashboardLayout title={title}>
-                  <Component />
-                </DashboardLayout>
-              }
-            />
-          }
-        />
-      );
-    })}
-
-    {DcRoutes.map(({ path, title, component: Component }) => (
-      <Route
-        key={path}
-        path={path}
+  return (
+    <Routes>
+      {/* ==================== PUBLIC ROUTES ==================== */}
+      <Route 
+        path="/login" 
         element={
-          <PrivateRoute
-            usersBlocked={BLOCKED_USERS}
-            requiredRoles={[]}
-            element={
-              <DashboardLayout title={title} showBuildingNum={true}>
-                <Component />
-              </DashboardLayout>
-            }
-          />
+          isAuthenticated ? <Navigate to="/evaluations" replace /> : <LoginPage />
+        } 
+      />
+
+      {/* ==================== PROTECTED ROUTES ==================== */}
+      
+      {/* Home - Lista de evaluaciones */}
+      <Route
+        path="/evaluations"
+        element={
+          <ProtectedRoute>
+            <EvaluationHome />
+          </ProtectedRoute>
         }
       />
-    ))}
 
-    {GlobalRoutes.map(({ path, title, component: Component }) => (
+      {/* Formulario de evaluación */}
       <Route
-        key={path}
-        path={path}
+        path="/evaluation/:id"
         element={
-          <PrivateRoute
-            usersBlocked={BLOCKED_USERS}
-            requiredRoles={[]}
-            element={
-              <DashboardLayout title={title}>
-                <Component />
-              </DashboardLayout>
-            }
-          />
+          <ProtectedRoute>
+            <EvaluationForm />
+          </ProtectedRoute>
         }
       />
-    ))}
 
-    <Route path="*" element={<NotFound />} />
-  </Routes>
-);
+      {/* Resultados de evaluación */}
+      <Route
+        path="/evaluation/:id/results"
+        element={
+          <ProtectedRoute>
+            <EvaluationResults />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ==================== REDIRECTS ==================== */}
+      
+      {/* Root redirect */}
+      <Route 
+        path="/" 
+        element={<Navigate to="/evaluations" replace />} 
+      />
+
+      {/* 404 - Not Found */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
 
 export default AppRoutes;

@@ -1,41 +1,21 @@
-// src/components/Evaluation/CreateEvaluationModal.jsx
-import React, { useState } from 'react';
+// src/pages/Evaluation/components/EvaluationHome/CreateEvaluationModal.jsx
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../../contexts/AuthContext';  // ✅ IMPORTAR
 import EvaluationService from '../../../../services/EvaluationService';
-import EmployeeSearchInput from '../EmployeeSearchInput';
 
 const CreateEvaluationModal = ({ onClose, onSuccess }) => {
-  const [formData, setFormData] = useState({
-    evaluator_userid: ''  // ✅ ELIMINAR 'name' del formData
-  });
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const { currentUser } = useAuth();  // ✅ OBTENER USUARIO ACTUAL
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleEmployeeSelect = (employee) => {
-    setSelectedEmployee(employee);
-    if (employee) {
-      setFormData({
-        evaluator_userid: employee.userid
-      });
-    } else {
-      setFormData({
-        evaluator_userid: ''
-      });
-    }
-    setError('');
-  };
+  // ✅ Ya NO necesitamos formData ni EmployeeSearchInput
+  // El usuario actual es quien crea la evaluación
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
-    if (!formData.evaluator_userid) {
-      setError('Please select an employee');
-      return;
-    }
-
-    if (!selectedEmployee) {
-      setError('Employee information not loaded. Please select again.');
+    if (!currentUser) {
+      setError('User not authenticated');
       return;
     }
 
@@ -43,7 +23,9 @@ const CreateEvaluationModal = ({ onClose, onSuccess }) => {
     setError('');
 
     try {
-      const result = await EvaluationService.createEvaluation(formData);
+      const result = await EvaluationService.createEvaluation({
+        evaluator_userid: currentUser.userid
+      });
       
       if (result) {
         onSuccess(result);
@@ -89,53 +71,44 @@ const CreateEvaluationModal = ({ onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* Employee Search */}
-          <div className="mb-5">
-            <label className="block text-sm font-bold text-gray-300 mb-2">
-              Select Evaluator *
-            </label>
-            <EmployeeSearchInput
-              value={formData.evaluator_userid}
-              onChange={(userid) => {
-                setFormData({ evaluator_userid: userid });
-              }}
-              onEmployeeSelect={handleEmployeeSelect}
-              placeholder="Search by USERID or name..."
-              className="w-full"
-            />
-            <p className="mt-2 text-xs text-gray-400">
-              The evaluation will be created for the selected employee's Business Unit
-            </p>
-          </div>
-
-          {/* Employee Information Display */}
-          {selectedEmployee && (
-            <div className="mb-6 p-4 bg-gray-700/50 border-2 border-gray-600 rounded-lg">
-              <h3 className="text-sm font-bold text-gray-300 mb-3">Evaluator Information</h3>
+          {/* Current User Information */}
+          <div className="mb-6 p-4 bg-gray-700/50 border-2 border-gray-600 rounded-lg">
+            <h3 className="text-sm font-bold text-gray-300 mb-3">Your Information</h3>
+            
+            <div className="space-y-2">
+              <div className="flex items-start">
+                <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0">Name:</span>
+                <span className="text-sm text-white font-medium flex-1">{currentUser?.name || 'N/A'}</span>
+              </div>
               
-              <div className="space-y-2">
-                <div className="flex items-start">
-                  <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0">Name:</span>
-                  <span className="text-sm text-white font-medium flex-1">{selectedEmployee.name || 'N/A'}</span>
-                </div>
-                
-                <div className="flex items-start">
-                  <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0">Business Unit:</span>
-                  <span className="text-sm text-white font-bold">{selectedEmployee.business_unit || 'N/A'}</span>
-                </div>
-                
-                <div className="flex items-start">
-                  <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0">Region:</span>
-                  <span className="text-sm text-white">{selectedEmployee.region || 'N/A'}</span>
-                </div>
-                
-                <div className="flex items-start">
-                  <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0">Business Segment:</span>
-                  <span className="text-sm text-white">{selectedEmployee.business_segment || 'N/A'}</span>
-                </div>
+              <div className="flex items-start">
+                <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0">USERID:</span>
+                <span className="text-sm text-white font-medium">{currentUser?.userid || 'N/A'}</span>
+              </div>
+              
+              <div className="flex items-start">
+                <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0">Business Unit:</span>
+                <span className="text-sm text-white font-bold">{currentUser?.business_unit || 'N/A'}</span>
+              </div>
+              
+              <div className="flex items-start">
+                <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0">Region:</span>
+                <span className="text-sm text-white">{currentUser?.region || 'N/A'}</span>
+              </div>
+              
+              <div className="flex items-start">
+                <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0">Business Segment:</span>
+                <span className="text-sm text-white">{currentUser?.business_segment || 'N/A'}</span>
               </div>
             </div>
-          )}
+          </div>
+
+          {/* Info Box */}
+          <div className="mb-6 p-4 bg-blue-900/20 border-2 border-blue-500/30 rounded-lg">
+            <p className="text-blue-300 text-sm">
+              <span className="font-semibold">Note:</span> This evaluation will be created for your Business Unit: <span className="font-bold">{currentUser?.business_unit || 'N/A'}</span>
+            </p>
+          </div>
 
           {/* Buttons */}
           <div className="flex gap-3">
@@ -149,7 +122,7 @@ const CreateEvaluationModal = ({ onClose, onSuccess }) => {
             </button>
             <button
               type="submit"
-              disabled={loading || !selectedEmployee}
+              disabled={loading}
               className="flex-1 px-5 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (

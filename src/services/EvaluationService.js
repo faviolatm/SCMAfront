@@ -1,5 +1,4 @@
 // services/EvaluationService.js
-
 import BaseApiService from './BaseApiService';
 
 /**
@@ -7,7 +6,6 @@ import BaseApiService from './BaseApiService';
  * Maneja operaciones de evaluaciones
  */
 class EvaluationService extends BaseApiService {
-
   /**
    * Get all evaluations
    * @param {string|null} status - Optional status filter
@@ -19,6 +17,27 @@ class EvaluationService extends BaseApiService {
       : '/evaluations';
     
     return await this.get(endpoint, []);
+  }
+
+  /**
+   * Get evaluations for a specific user
+   * @param {string} userid - User ID
+   * @param {string|null} statusFilter - Optional status filter
+   * @returns {Promise<Array>}
+   */
+  static async getUserEvaluations(userid, statusFilter = null) {
+    try {
+      const endpoint = statusFilter 
+        ? `/evaluations/user/${userid}?status_filter=${statusFilter}`
+        : `/evaluations/user/${userid}`;
+      
+      const response = await this.get(endpoint, []);
+      console.log('📊 getUserEvaluations response:', response); // ✅ LOG
+      return response || [];
+    } catch (error) {
+      console.error('❌ Error fetching user evaluations:', error);
+      return [];
+    }
   }
 
   /**
@@ -36,7 +55,7 @@ class EvaluationService extends BaseApiService {
    * @returns {Promise<Object|null>}
    */
   static async getEvaluationById(id) {
-    return await this.get(`/evaluations/${id}`);
+    return await this.get(`/evaluations/${id}`);  // ✅ CORREGIDO
   }
 
   /**
@@ -45,7 +64,7 @@ class EvaluationService extends BaseApiService {
    * @returns {Promise<Object|null>}
    */
   static async completeEvaluation(id) {
-    return await this.put(`/evaluations/${id}/complete`, {});
+    return await this.put(`/evaluations/${id}/complete`, {});  // ✅ CORREGIDO
   }
 
   /**
@@ -55,7 +74,7 @@ class EvaluationService extends BaseApiService {
    * @returns {Promise<Object|null>}
    */
   static async updateEvaluation(id, updateData) {
-    return await this.put(`/evaluations/${id}`, updateData);
+    return await this.put(`/evaluations/${id}`, updateData);  // ✅ CORREGIDO
   }
 
   /**
@@ -64,7 +83,7 @@ class EvaluationService extends BaseApiService {
    * @returns {Promise<Object|null>}
    */
   static async deleteEvaluation(id) {
-    return await this.delete(`/evaluations/${id}`);
+    return await this.delete(`/evaluations/${id}`);  // ✅ CORREGIDO
   }
 }
 

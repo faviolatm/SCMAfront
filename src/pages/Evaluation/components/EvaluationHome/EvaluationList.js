@@ -22,15 +22,8 @@ const EvaluationList = () => {
     setCurrentPage(1);
   }, [filter]);
 
-  const getStatusConfig = (status) => {
+    const getStatusConfig = (status) => {
     const configs = {
-      pending: {
-        color: 'from-purple-500 to-purple-600',
-        bg: 'bg-purple-500/10',
-        text: 'text-purple-400',
-        border: 'border-purple-500',
-        label: 'Pending'
-      },
       in_progress: {
         color: 'from-orange-500 to-amber-500',
         bg: 'bg-orange-500/10',
@@ -46,7 +39,7 @@ const EvaluationList = () => {
         label: 'Completed'
       }
     };
-    return configs[status];
+    return configs[status] || configs.in_progress; // Default fallback
   };
 
   const formatDate = (dateString) => {
@@ -87,49 +80,41 @@ const EvaluationList = () => {
 
   return (
     <div>
-      {/* Filter Pills */}
-      <div className="flex gap-3 mb-6">
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-5 py-2.5 rounded-full font-semibold transition-all border-2 ${
-            filter === 'all'
-              ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg shadow-orange-500/30 border-orange-500'
-              : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border-gray-700 hover:border-gray-600'
-          }`}
-        >
-          All ({evaluations.length})
-        </button>
-        <button
-          onClick={() => setFilter('pending')}
-          className={`px-5 py-2.5 rounded-full font-semibold transition-all border-2 ${
-            filter === 'pending'
-              ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-500/30 border-purple-500'
-              : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border-gray-700 hover:border-gray-600'
-          }`}
-        >
-          Pending
-        </button>
-        <button
-          onClick={() => setFilter('in_progress')}
-          className={`px-5 py-2.5 rounded-full font-semibold transition-all border-2 ${
-            filter === 'in_progress'
-              ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg shadow-orange-500/30 border-orange-500'
-              : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border-gray-700 hover:border-gray-600'
-          }`}
-        >
-          In Progress
-        </button>
-        <button
-          onClick={() => setFilter('completed')}
-          className={`px-5 py-2.5 rounded-full font-semibold transition-all border-2 ${
-            filter === 'completed'
-              ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-500/30 border-green-500'
-              : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border-gray-700 hover:border-gray-600'
-          }`}
-        >
-          Completed
-        </button>
-      </div>
+    {/* Filter Pills */}
+    <div className="flex gap-3 mb-6">
+      <button
+        onClick={() => setFilter('all')}
+        className={`px-5 py-2.5 rounded-full font-semibold transition-all border-2 ${
+          filter === 'all'
+            ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg shadow-orange-500/30 border-orange-500'
+            : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border-gray-700 hover:border-gray-600'
+        }`}
+      >
+        All ({evaluations.length})
+      </button>
+      
+      <button
+        onClick={() => setFilter('in_progress')}
+        className={`px-5 py-2.5 rounded-full font-semibold transition-all border-2 ${
+          filter === 'in_progress'
+            ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg shadow-orange-500/30 border-orange-500'
+            : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border-gray-700 hover:border-gray-600'
+        }`}
+      >
+        In Progress
+      </button>
+      
+      <button
+        onClick={() => setFilter('completed')}
+        className={`px-5 py-2.5 rounded-full font-semibold transition-all border-2 ${
+          filter === 'completed'
+            ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-500/30 border-green-500'
+            : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border-gray-700 hover:border-gray-600'
+        }`}
+      >
+        Completed
+      </button>
+    </div>
 
       {/* Evaluations Grid */}
       {evaluations.length > 0 ? (
