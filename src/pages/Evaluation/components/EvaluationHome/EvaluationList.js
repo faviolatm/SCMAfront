@@ -1,12 +1,21 @@
-// src/pages/Evaluation/components/EvaluationList.jsx
+// src/pages/Evaluation/components/EvaluationHome/EvaluationList.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvaluationList } from '../../hooks/useEvaluationList';
 import EvaluationSummary from '../EvaluationSummary';
+import FilterBar from './FilterBar';
 
 const EvaluationList = () => {
   const navigate = useNavigate();
-  const { evaluations, loading, filter, setFilter } = useEvaluationList();
+  const { 
+    evaluations, 
+    loading, 
+    filters, 
+    filterOptions, 
+    updateFilter, 
+    clearFilters
+  } = useEvaluationList();
+  
   const [selectedEvaluationId, setSelectedEvaluationId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -20,9 +29,9 @@ const EvaluationList = () => {
   // Resetear a página 1 cuando cambia el filtro
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [filter]);
+  }, [filters]);
 
-    const getStatusConfig = (status) => {
+  const getStatusConfig = (status) => {
     const configs = {
       in_progress: {
         color: 'from-orange-500 to-amber-500',
@@ -39,7 +48,7 @@ const EvaluationList = () => {
         label: 'Completed'
       }
     };
-    return configs[status] || configs.in_progress; // Default fallback
+    return configs[status] || configs.in_progress;
   };
 
   const formatDate = (dateString) => {
@@ -76,45 +85,17 @@ const EvaluationList = () => {
         <p className="text-gray-400 font-medium">Loading evaluations...</p>
       </div>
     );
-  };
+  }
 
   return (
     <div>
-    {/* Filter Pills */}
-    <div className="flex gap-3 mb-6">
-      <button
-        onClick={() => setFilter('all')}
-        className={`px-5 py-2.5 rounded-full font-semibold transition-all border-2 ${
-          filter === 'all'
-            ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg shadow-orange-500/30 border-orange-500'
-            : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border-gray-700 hover:border-gray-600'
-        }`}
-      >
-        All ({evaluations.length})
-      </button>
-      
-      <button
-        onClick={() => setFilter('in_progress')}
-        className={`px-5 py-2.5 rounded-full font-semibold transition-all border-2 ${
-          filter === 'in_progress'
-            ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg shadow-orange-500/30 border-orange-500'
-            : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border-gray-700 hover:border-gray-600'
-        }`}
-      >
-        In Progress
-      </button>
-      
-      <button
-        onClick={() => setFilter('completed')}
-        className={`px-5 py-2.5 rounded-full font-semibold transition-all border-2 ${
-          filter === 'completed'
-            ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-500/30 border-green-500'
-            : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border-gray-700 hover:border-gray-600'
-        }`}
-      >
-        Completed
-      </button>
-    </div>
+      {/* Filter Bar */}
+      <FilterBar 
+        filters={filters}
+        filterOptions={filterOptions}
+        onFilterChange={updateFilter}
+        onClearFilters={clearFilters}
+      />
 
       {/* Evaluations Grid */}
       {evaluations.length > 0 ? (
@@ -131,7 +112,6 @@ const EvaluationList = () => {
                 >
                   {/* Header with circular status */}
                   <div className="flex items-start gap-3 mb-3">
-                    {/* Status Circle */}
                     <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${statusConfig.color} flex items-center justify-center flex-shrink-0`}>
                       {evaluation.status === 'completed' && (
                         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,14 +123,8 @@ const EvaluationList = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       )}
-                      {evaluation.status === 'pending' && (
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      )}
                     </div>
 
-                    {/* Title and Status */}
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg font-bold text-white mb-1.5 truncate">
                         {evaluation.name}
@@ -168,7 +142,7 @@ const EvaluationList = () => {
                         <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                       </svg>
                       <span className="truncate">
-                        {evaluation.evaluator_userid || evaluation.evaluator_name || 'N/A'}
+                        {evaluation.evaluator_name || evaluation.evaluator_userid || 'N/A'}
                       </span>
                     </div>
                     
@@ -188,13 +162,6 @@ const EvaluationList = () => {
                       </div>
                     )}
                   </div>
-
-                  {/* Description if exists */}
-                  {evaluation.description && (
-                    <p className="text-xs text-gray-500 mb-3 line-clamp-2">
-                      {evaluation.description}
-                    </p>
-                  )}
 
                   {/* Footer Actions */}
                   <div className="flex items-center justify-between pt-3 border-t border-gray-700/50">
@@ -226,7 +193,6 @@ const EvaluationList = () => {
           {/* Paginación */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 mt-8">
-              {/* Botón Previous */}
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
@@ -241,9 +207,7 @@ const EvaluationList = () => {
                 </svg>
               </button>
 
-              {/* Números de página */}
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                // Mostrar solo las páginas cercanas a la actual
                 if (
                   page === 1 ||
                   page === totalPages ||
@@ -262,10 +226,7 @@ const EvaluationList = () => {
                       {page}
                     </button>
                   );
-                } else if (
-                  page === currentPage - 2 ||
-                  page === currentPage + 2
-                ) {
+                } else if (page === currentPage - 2 || page === currentPage + 2) {
                   return (
                     <span key={page} className="text-gray-600 px-2">
                       ...
@@ -275,7 +236,6 @@ const EvaluationList = () => {
                 return null;
               })}
 
-              {/* Botón Next */}
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
@@ -301,10 +261,7 @@ const EvaluationList = () => {
           </div>
           <p className="text-white font-semibold text-lg mb-2">No evaluations found</p>
           <p className="text-gray-500">
-            {filter === 'all' 
-              ? 'Create a new evaluation to get started'
-              : `No ${filter} evaluations at the moment`
-            }
+            Try adjusting your filters or create a new evaluation
           </p>
         </div>
       )}

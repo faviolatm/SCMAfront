@@ -1,160 +1,44 @@
-// src/pages/Evaluation/components/EvaluationHome/Analytics/AnalyticsDashboard.jsx
-import React, { useState, useEffect } from 'react';
-import AnalyticsService from '../../services/AnalyticsService';
+// src/pages/Evaluation/AnalyticsDashboard.jsx
+import React from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useAnalytics } from './hooks/useAnalytics';
+import { useEvaluationList } from './hooks/useEvaluationList';
 
-// Importar todos los componentes
+// Importar componentes
 import OverviewCards from './components/Analytics/OverviewCards';
 import AnalyticsFilters from './components/Analytics/AnalyticsFilters';
-import LowScoresTable from './components/Analytics/LowScoresTable';
+import LowScoresOverview from './components/Analytics/LowScoresOverview';
+import LowScoresByCategory from './components/Analytics/LowScoresByCategory';
+import LowScoresByBU from './components/Analytics/LowScoresByBU';
+import LowScoresByRegion from './components/Analytics/LowScoresByRegion';
+import LowScoresByBuilding from './components/Analytics/LowScoresByBuilding';
 import AverageScoresChart from './components/Analytics/AverageScoresChart';
-import BusinessUnitChart from './components/Analytics/BusinessUnitChart';
-import RegionChart from './components/Analytics/RegionChart';
-import CompletionTrendChart from './components/Analytics/CompletionTrendChart';
-import TopPerformersTable from './components/Analytics/TopPerformersTable';
+import ScoreDistributionChart from './components/Analytics/ScoreDistributionChart';
 
 const AnalyticsDashboard = () => {
-  // States para los datos
-  const [overviewData, setOverviewData] = useState(null);
-  const [lowScoresData, setLowScoresData] = useState([]);
-  const [avgScoresData, setAvgScoresData] = useState([]);
-  const [buData, setBuData] = useState([]);
-  const [regionData, setRegionData] = useState([]);
-  const [trendData, setTrendData] = useState([]);
-  const [performersData, setPerformersData] = useState([]);
-
-  // States para loading
-  const [loadingOverview, setLoadingOverview] = useState(true);
-  const [loadingLowScores, setLoadingLowScores] = useState(true);
-  const [loadingAvgScores, setLoadingAvgScores] = useState(true);
-  const [loadingBU, setLoadingBU] = useState(true);
-  const [loadingRegion, setLoadingRegion] = useState(true);
-  const [loadingTrend, setLoadingTrend] = useState(true);
-  const [loadingPerformers, setLoadingPerformers] = useState(true);
-
-  // Filtros activos
-  const [filters, setFilters] = useState({
-    businessUnit: '',
-    region: ''
-  });
-
-  // Cargar datos iniciales (sin filtros)
-  useEffect(() => {
-    loadOverviewData();
-    loadBusinessUnitData();
-    loadRegionData();
-    loadCompletionTrendData();
-    loadTopPerformersData();
-  }, []);
-
-  // Cargar datos con filtros
-  useEffect(() => {
-    loadLowScoresData();
-    loadAverageScoresData();
-  }, [filters]);
-
-  // ========================================
-  // Funciones de carga de datos
-  // ========================================
-
-  const loadOverviewData = async () => {
-    try {
-      setLoadingOverview(true);
-      const data = await AnalyticsService.getOverview();
-      setOverviewData(data);
-    } catch (error) {
-      console.error('Error loading overview:', error);
-    } finally {
-      setLoadingOverview(false);
-    }
-  };
-
-  const loadLowScoresData = async () => {
-    try {
-      setLoadingLowScores(true);
-      const data = await AnalyticsService.getLowScores(
-        2, 
-        filters.businessUnit || null, 
-        filters.region || null
-      );
-      setLowScoresData(data);
-    } catch (error) {
-      console.error('Error loading low scores:', error);
-    } finally {
-      setLoadingLowScores(false);
-    }
-  };
-
-  const loadAverageScoresData = async () => {
-    try {
-      setLoadingAvgScores(true);
-      const data = await AnalyticsService.getAverageScores(
-        filters.businessUnit || null, 
-        filters.region || null
-      );
-      setAvgScoresData(data);
-    } catch (error) {
-      console.error('Error loading average scores:', error);
-    } finally {
-      setLoadingAvgScores(false);
-    }
-  };
-
-  const loadBusinessUnitData = async () => {
-    try {
-      setLoadingBU(true);
-      const data = await AnalyticsService.getByBusinessUnit();
-      setBuData(data);
-    } catch (error) {
-      console.error('Error loading BU data:', error);
-    } finally {
-      setLoadingBU(false);
-    }
-  };
-
-  const loadRegionData = async () => {
-    try {
-      setLoadingRegion(true);
-      const data = await AnalyticsService.getByRegion();
-      setRegionData(data);
-    } catch (error) {
-      console.error('Error loading region data:', error);
-    } finally {
-      setLoadingRegion(false);
-    }
-  };
-
-  const loadCompletionTrendData = async () => {
-    try {
-      setLoadingTrend(true);
-      const data = await AnalyticsService.getCompletionTrend(30);
-      setTrendData(data);
-    } catch (error) {
-      console.error('Error loading trend data:', error);
-    } finally {
-      setLoadingTrend(false);
-    }
-  };
-
-  const loadTopPerformersData = async () => {
-    try {
-      setLoadingPerformers(true);
-      const data = await AnalyticsService.getTopPerformers(10);
-      setPerformersData(data);
-    } catch (error) {
-      console.error('Error loading performers data:', error);
-    } finally {
-      setLoadingPerformers(false);
-    }
-  };
-
-  // Handler para cambio de filtros
-  const handleFilterChange = (newFilters) => {
-    console.log('📊 Filters changed:', newFilters);
-    setFilters(newFilters);
-  };
+  const { currentUser } = useAuth();
+  const { filterOptions } = useEvaluationList(); // Reutilizar filter options
+  
+  const {
+    loading,
+    threshold,
+    filters,
+    overview,
+    lowScoresOverview,
+    lowScoresByCategory,
+    lowScoresByBU,
+    lowScoresByRegion,
+    lowScoresByBuilding,
+    averageScores,
+    scoreDistribution,
+    updateFilter,
+    clearFilters,
+    updateThreshold,
+    refreshAnalytics
+  } = useAnalytics();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -166,73 +50,109 @@ const AnalyticsDashboard = () => {
 
         {/* Refresh Button */}
         <button
-          onClick={() => {
-            loadOverviewData();
-            loadLowScoresData();
-            loadAverageScoresData();
-            loadBusinessUnitData();
-            loadRegionData();
-            loadCompletionTrendData();
-            loadTopPerformersData();
-          }}
-          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border-2 border-gray-700 hover:border-orange-500 text-gray-300 hover:text-orange-400 rounded-lg font-semibold transition-all flex items-center gap-2"
+          onClick={refreshAnalytics}
+          disabled={loading}
+          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border-2 border-gray-700 hover:border-orange-500 text-gray-300 hover:text-orange-400 rounded-lg font-semibold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg 
+            className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Refresh
+          {loading ? 'Loading...' : 'Refresh'}
         </button>
       </div>
 
       {/* Overview Cards */}
-      <OverviewCards data={overviewData} loading={loadingOverview} />
+      <OverviewCards data={overview} loading={loading} />
 
       {/* Filters */}
-      <AnalyticsFilters onFilterChange={handleFilterChange} />
-
-      {/* Low Scores Alert - Prioridad Alta */}
-      <LowScoresTable 
-        data={lowScoresData} 
-        loading={loadingLowScores}
+      <AnalyticsFilters
         filters={filters}
+        filterOptions={filterOptions}
+        threshold={threshold}
+        onFilterChange={updateFilter}
+        onClearFilters={clearFilters}
+        onThresholdChange={updateThreshold}
+        userLevel={currentUser?.scma_level}
       />
 
-      {/* Average Scores Chart */}
-      <AverageScoresChart 
-        data={avgScoresData} 
-        loading={loadingAvgScores}
-      />
-
-      {/* Completion Trend */}
-      <CompletionTrendChart 
-        data={trendData} 
-        loading={loadingTrend}
-      />
-
-      {/* Grid de 2 columnas para BU y Region */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <BusinessUnitChart 
-          data={buData} 
-          loading={loadingBU}
+      {/* 🔴 LOW SCORES SECTION - PRIORIDAD ALTA */}
+      <div className="space-y-6">
+        {/* Low Scores Overview - Cards de resumen */}
+        <LowScoresOverview 
+          data={lowScoresOverview} 
+          loading={loading}
+          threshold={threshold}
         />
-        <RegionChart 
-          data={regionData} 
-          loading={loadingRegion}
+
+        {/* Low Scores by Category - Top problemas */}
+        <LowScoresByCategory 
+          data={lowScoresByCategory} 
+          loading={loading}
+          threshold={threshold}
+        />
+
+        {/* Grid de 2 columnas: BU y Region */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <LowScoresByBU 
+            data={lowScoresByBU} 
+            loading={loading}
+            threshold={threshold}
+          />
+          <LowScoresByRegion 
+            data={lowScoresByRegion} 
+            loading={loading}
+            threshold={threshold}
+          />
+        </div>
+
+        {/* Low Scores by Building - Full width */}
+        <LowScoresByBuilding 
+          data={lowScoresByBuilding} 
+          loading={loading}
+          threshold={threshold}
         />
       </div>
 
-      {/* Top Performers */}
-      <TopPerformersTable 
-        data={performersData} 
-        loading={loadingPerformers}
-      />
+      {/* Divider */}
+      <div className="border-t-2 border-gray-700 my-8"></div>
+
+      {/* 📊 GENERAL ANALYTICS SECTION */}
+      <div className="space-y-6">
+        <h3 className="text-2xl font-bold text-white">General Analytics</h3>
+
+        {/* Score Distribution */}
+        <ScoreDistributionChart 
+          data={scoreDistribution} 
+          loading={loading}
+        />
+
+        {/* Average Scores by Category */}
+        <AverageScoresChart 
+          data={averageScores} 
+          loading={loading}
+        />
+      </div>
 
       {/* Footer Info */}
       <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-4">
-        <p className="text-gray-400 text-sm text-center">
-          <span className="font-semibold">Note:</span> All metrics are calculated from completed evaluations. 
-          Data updates in real-time when new evaluations are submitted.
-        </p>
+        <div className="flex items-start gap-3">
+          <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <p className="text-gray-300 text-sm font-semibold mb-1">About Analytics</p>
+            <p className="text-gray-400 text-sm">
+              All metrics are calculated from completed evaluations only. Data respects your permission level 
+              (Level {currentUser?.scma_level}) and updates in real-time when new evaluations are submitted. 
+              Low scores are categorized as scores ≤ {threshold}.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

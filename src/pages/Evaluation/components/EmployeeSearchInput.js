@@ -177,7 +177,7 @@ const EmployeeSearchInput = React.memo(({ value, onChange, onEmployeeSelect, pla
                 <span className="font-medium">Region:</span> {selectedEmployee.region || 'N/A'}
               </p>
               <p className="text-xs text-gray-600">
-                <span className="font-medium">Business Segment:</span> {selectedEmployee.business_segment || 'N/A'}
+                <span className="font-medium">Business unit:</span> {selectedEmployee.business_unit || 'N/A'}
               </p>
             </div>
           </div>
@@ -214,8 +214,8 @@ const EmployeeSearchInput = React.memo(({ value, onChange, onEmployeeSelect, pla
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
                           {employee.region && <span>Region: {employee.region}</span>}
-                          {employee.region && employee.business_segment && <span> • </span>}
-                          {employee.business_segment && <span>{employee.business_segment}</span>}
+                          {employee.region && employee.business_unit && <span> • </span>}
+                          {employee.business_unit && <span>{employee.business_unit}</span>}
                         </div>
                       </div>
                     </div>

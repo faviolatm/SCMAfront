@@ -3,49 +3,158 @@ import BaseApiService from './BaseApiService';
 
 class AnalyticsService extends BaseApiService {
   
-  static async getOverview() {
-    const response = await this.get('/analytics/overview');
-    return response?.data || null;
+  /**
+   * Get overview statistics with permissions and filters
+   * @param {string} userid - User ID (required for permissions)
+   * @param {Object} filters - Optional filters {business_unit, region, building}
+   */
+  static async getOverview(userid, filters = {}) {
+    try {
+      const params = new URLSearchParams({ userid });
+      
+      if (filters.business_unit) params.append('business_unit', filters.business_unit);
+      if (filters.region) params.append('region', filters.region);
+      if (filters.building) params.append('building', filters.building);
+      
+      const response = await this.get(`/analytics/overview?${params.toString()}`);
+      return response?.data || null;
+    } catch (error) {
+      console.error('Error fetching overview:', error);
+      return null;
+    }
   }
 
-  static async getByBusinessUnit() {
-    const response = await this.get('/analytics/by-business-unit');
-    return response?.data || [];
+  /**
+   * Get low scores overview
+   */
+  static async getLowScoresOverview(userid, threshold = 2, filters = {}) {
+    try {
+      const params = new URLSearchParams({ userid, threshold });
+      
+      if (filters.business_unit) params.append('business_unit', filters.business_unit);
+      if (filters.region) params.append('region', filters.region);
+      if (filters.building) params.append('building', filters.building);
+      
+      const response = await this.get(`/analytics/low-scores/overview?${params.toString()}`);
+      return response?.data || null;
+    } catch (error) {
+      console.error('Error fetching low scores overview:', error);
+      return null;
+    }
   }
 
-  static async getByRegion() {
-    const response = await this.get('/analytics/by-region');
-    return response?.data || [];
+  /**
+   * Get low scores by category (top problematic categories)
+   */
+  static async getLowScoresByCategory(userid, threshold = 2, limit = 10, filters = {}) {
+    try {
+      const params = new URLSearchParams({ userid, threshold, limit });
+      
+      if (filters.business_unit) params.append('business_unit', filters.business_unit);
+      if (filters.region) params.append('region', filters.region);
+      if (filters.building) params.append('building', filters.building);
+      
+      const response = await this.get(`/analytics/low-scores/by-category?${params.toString()}`);
+      return response?.data || [];
+    } catch (error) {
+      console.error('Error fetching low scores by category:', error);
+      return [];
+    }
   }
 
-  static async getLowScores(threshold = 2, businessUnit = null, region = null) {
-    let endpoint = `/analytics/low-scores?threshold=${threshold}`;
-    if (businessUnit) endpoint += `&business_unit=${encodeURIComponent(businessUnit)}`;
-    if (region) endpoint += `&region=${encodeURIComponent(region)}`;
-    
-    const response = await this.get(endpoint);
-    return response?.data || [];
+  /**
+   * Get low scores by business unit
+   */
+  static async getLowScoresByBusinessUnit(userid, threshold = 2, filters = {}) {
+    try {
+      const params = new URLSearchParams({ userid, threshold });
+      
+      if (filters.business_unit) params.append('business_unit', filters.business_unit);
+      if (filters.region) params.append('region', filters.region);
+      if (filters.building) params.append('building', filters.building);
+      
+      const response = await this.get(`/analytics/low-scores/by-business-unit?${params.toString()}`);
+      return response?.data || [];
+    } catch (error) {
+      console.error('Error fetching low scores by BU:', error);
+      return [];
+    }
   }
 
-  static async getAverageScores(businessUnit = null, region = null) {
-    let endpoint = '/analytics/average-scores';
-    const params = [];
-    if (businessUnit) params.push(`business_unit=${encodeURIComponent(businessUnit)}`);
-    if (region) params.push(`region=${encodeURIComponent(region)}`);
-    if (params.length > 0) endpoint += `?${params.join('&')}`;
-    
-    const response = await this.get(endpoint);
-    return response?.data || [];
+  /**
+   * Get low scores by region
+   */
+  static async getLowScoresByRegion(userid, threshold = 2, filters = {}) {
+    try {
+      const params = new URLSearchParams({ userid, threshold });
+      
+      if (filters.business_unit) params.append('business_unit', filters.business_unit);
+      if (filters.region) params.append('region', filters.region);
+      if (filters.building) params.append('building', filters.building);
+      
+      const response = await this.get(`/analytics/low-scores/by-region?${params.toString()}`);
+      return response?.data || [];
+    } catch (error) {
+      console.error('Error fetching low scores by region:', error);
+      return [];
+    }
   }
 
-  static async getCompletionTrend(days = 30) {
-    const response = await this.get(`/analytics/completion-trend?days=${days}`);
-    return response?.data || [];
+  /**
+   * Get low scores by building
+   */
+  static async getLowScoresByBuilding(userid, threshold = 2, filters = {}) {
+    try {
+      const params = new URLSearchParams({ userid, threshold });
+      
+      if (filters.business_unit) params.append('business_unit', filters.business_unit);
+      if (filters.region) params.append('region', filters.region);
+      if (filters.building) params.append('building', filters.building);
+      
+      const response = await this.get(`/analytics/low-scores/by-building?${params.toString()}`);
+      return response?.data || [];
+    } catch (error) {
+      console.error('Error fetching low scores by building:', error);
+      return [];
+    }
   }
 
-  static async getTopPerformers(limit = 10) {
-    const response = await this.get(`/analytics/top-performers?limit=${limit}`);
-    return response?.data || [];
+  /**
+   * Get average scores by category
+   */
+  static async getAverageScores(userid, filters = {}) {
+    try {
+      const params = new URLSearchParams({ userid });
+      
+      if (filters.business_unit) params.append('business_unit', filters.business_unit);
+      if (filters.region) params.append('region', filters.region);
+      if (filters.building) params.append('building', filters.building);
+      
+      const response = await this.get(`/analytics/average-scores?${params.toString()}`);
+      return response?.data || [];
+    } catch (error) {
+      console.error('Error fetching average scores:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get score distribution (0-5)
+   */
+  static async getScoreDistribution(userid, filters = {}) {
+    try {
+      const params = new URLSearchParams({ userid });
+      
+      if (filters.business_unit) params.append('business_unit', filters.business_unit);
+      if (filters.region) params.append('region', filters.region);
+      if (filters.building) params.append('building', filters.building);
+      
+      const response = await this.get(`/analytics/score-distribution?${params.toString()}`);
+      return response?.data || null;
+    } catch (error) {
+      console.error('Error fetching score distribution:', error);
+      return null;
+    }
   }
 }
 
