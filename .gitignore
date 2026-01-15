@@ -33,3 +33,7 @@ echo "**/.cache/" >> .gitignore
 .env.development.local
 .env.test.local
 .env.production.local
+
+# React build
+build/
+scmab/

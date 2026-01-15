@@ -1,6 +1,6 @@
 // services/BaseApiService.js
 
-const API_BASE_URL =  'http://localhost:8001';
+const API_BASE_URL =  'http://mxl30gws6wm8sy3.mx.tycoelectronics.com:4003';
 const API_PREFIX = '/SCMA';
 
 /**
